@@ -3,633 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dora's Math Quest: Integer Island Expedition 🚀</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
-    <!-- MathJax Lazy Loading -->
-    <script>
-        window.MathJax = {
-            tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
-            svg: { fontCache: 'global' },
-            startup: { pageReady: () => window.MathJaxReady = true }
-        };
-    </script>
-    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <title>Dora's Math Quest: BIDMAS Expedition!</title>
     <style>
-        :root {
-            --primary-color: #4F46E5;
-            --secondary-color: #10B981;
-            --danger-color: #EF4444;
-            --background-gradient: linear-gradient(to bottom right, #87CEEB, #6A5ACD);
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--background-gradient);
-            @apply flex min-h-screen items-center justify-center p-2;
-        }
-
-        .app-container {
-            @apply bg-white rounded-3xl shadow-2xl p-4 max-w-[98%] w-full md:max-w-4xl md:p-8 border-4 border-[var(--primary-color)];
-            min-height: 650px;
-            max-height: 95vh;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .dora-avatar {
-            @apply text-6xl mb-6;
-            animation: float 3s infinite ease-in-out;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        .btn {
-            @apply bg-indigo-600 text-white font-extrabold py-3 px-4 rounded-full shadow-xl transition-transform duration-300 hover:scale-105 active:scale-95 border-4 border-[var(--primary-color)];
-            min-width: 120px;
-            font-size: 0.85rem;
-            @apply uppercase md:min-w-[200px] md:text-xl md:py-4 md:px-6;
-        }
-
-        .btn-secondary { @apply bg-green-600 border-[var(--secondary-color)]; }
-        .btn-danger { @apply bg-red-600 border-[var(--danger-color)]; }
-
-        .section-title {
-            @apply font-extrabold text-indigo-700 mb-4 md:mb-6;
-            font-size: clamp(2rem, 5vw, 4rem);
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .content-section {
-            @apply bg-gray-50 rounded-xl p-4 mb-6 shadow-sm border border-gray-200;
-            text-align: left;
-        }
-
-        .content-section h3 {
-            @apply font-bold text-indigo-700 mb-3 text-center;
-            font-size: clamp(1.5rem, 4vw, 2.5rem);
-        }
-
-        .content-section p {
-            @apply text-gray-700 mb-4;
-            font-size: clamp(0.95rem, 2.5vw, 1.1rem);
-            line-height: 1.6;
-        }
-
-        .example-math {
-            @apply bg-gray-100 rounded-lg p-3 my-4 border-2 border-gray-300 text-center overflow-x-auto;
-            font-size: clamp(1.2rem, 3.5vw, 1.8rem);
-        }
-
-        .emoji-display {
-            @apply block text-center my-2;
-            font-size: clamp(2rem, 6vw, 3rem);
-        }
-
-        .question-item {
-            @apply bg-gray-50 rounded-xl p-4 mb-6 shadow-sm border border-gray-200 text-center;
-        }
-
-        .question-text {
-            @apply font-bold text-gray-800 mb-4;
-            font-size: clamp(1.2rem, 3.5vw, 1.6rem);
-        }
-
-        .question-choices {
-            @apply flex flex-wrap justify-center gap-3 mt-4;
-        }
-
-        .choice-btn {
-            @apply bg-purple-200 text-purple-800 font-bold py-3 px-3 rounded-lg shadow-md transition duration-200 hover:bg-purple-300 border-2 border-purple-600;
-            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
-            flex: 1 1 calc(50% - 0.75rem);
-            min-height: 60px;
-            @apply flex items-center justify-center text-center;
-        }
-
-        @media (max-width: 640px) {
-            .choice-btn { @apply flex-1 w-full; }
-        }
-
-        .choice-btn:disabled {
-            @apply opacity-60 cursor-not-allowed bg-gray-300 text-gray-600;
-        }
-
-        .correct-animation {
-            @apply bg-green-100 border-green-500;
-            animation: pulse-correct 0.6s forwards;
-        }
-
-        .incorrect-animation {
-            @apply bg-red-100 border-red-500;
-            animation: shake 0.6s forwards;
-        }
-
-        @keyframes pulse-correct {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .skip-button {
-            @apply bg-yellow-500 text-yellow-900 font-bold py-2 px-4 rounded-full shadow-md hover:bg-yellow-600 border-2 border-yellow-700 mt-4;
-            font-size: clamp(0.8rem, 2.2vw, 1rem);
-        }
-
-        .feedback-message {
-            @apply fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/90 text-white p-6 rounded-3xl font-bold opacity-0 invisible transition-opacity duration-400 z-[100] border-4 border-white shadow-2xl;
-            font-size: clamp(1.5rem, 4vw, 2.5rem);
-        }
-
-        .feedback-message.show {
-            @apply opacity-100 visible;
-        }
-
-        .screen {
-            @apply hidden flex-col items-center w-full h-full overflow-y-auto;
-        }
-
-        .screen.active {
-            @apply flex;
-        }
-
-        .top-nav-buttons {
-            @apply flex flex-wrap justify-center gap-3 mb-6 w-full p-2;
-        }
-
-        .nav-btn {
-            @apply bg-blue-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-blue-600 transition duration-200;
-            font-size: clamp(0.8rem, 2vw, 1rem);
-        }
-
-        .loading-indicator {
-            @apply flex flex-col items-center justify-center p-6 text-gray-600 text-lg;
-        }
-
-        .loading-spinner {
-            @apply border-4 border-gray-200 border-t-blue-500 rounded-full w-8 h-8 animate-spin mb-4;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        section { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; }
+        .qnum { cursor: help; font-weight: bold; }
+        .idk { margin-left: 10px; cursor: pointer; }
+        .answer-input { margin-left: 10px; width: 100px; }
+        .check-btn { margin-left: 10px; cursor: pointer; }
+        .feedback { margin-left: 10px; color: green; display: none; }
+        .wrong { color: red; }
+        #progress-shards { font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="app-container" id="appContainer" role="main">
-        <div id="feedbackMessage" class="feedback-message" role="alert" aria-live="assertive"></div>
 
-        <div id="fullLandingPageContent" class="screen active">
-            <span class="dora-avatar" aria-hidden="true">🦋</span>
-            <h1 class="section-title">Dora's Math Quest: BIDMAS Expedition! 🚀</h1>
-            <p class="text-xl text-gray-700 mb-8 text-center">Hey Adventurer! I'm Dora, and Integer Island needs our help! Scroll down to master BIDMAS concepts and practice problems.</p>
+    <header>
+        🦋
+        Dora's Math Quest: BIDMAS Expedition! 🚀
 
-            <div class="top-nav-buttons">
-                <button class="nav-btn" data-nav="tutorial">Go to BIDMAS Basics 📖</button>
-                <button class="nav-btn" data-nav="practice">Go to Practice 💪</button>
-            </div>
+        Hey Adventurer! I'm Dora, and Integer Island needs our help! Scroll down to master BIDMAS concepts and practice problems.
+    </header>
 
-            <div id="tutorialSection" class="content-section"></div>
-            <div id="practiceSection" class="content-section"></div>
-            <button id="goToProgressButton" class="btn my-6">View Progress & Report 📈</button>
-        </div>
+    <nav>
+        <a href="#basics">Go to BIDMAS Basics 📖</a>
+        <a href="#practice">Go to Practice 💪</a>
+    </nav>
 
-        <div id="progressScreen" class="screen">
-            <h2 class="section-title">Your Expedition Log! ✨</h2>
-            <p class="text-xl text-gray-700 mb-4">Total Data Shards: <span id="progressPoints" class="font-bold text-blue-600">0</span></p>
-            <p class="text-xl text-gray-700 mb-4">Adventure Level: <span id="levelDisplay" class="font-bold text-green-600">Beginner Explorer</span></p>
-            <p class="text-xl text-gray-700 mb-4">Daily Check-in Streak: <span id="progressStreak" class="font-bold text-red-600">0</span> 🔥</p>
+    <section id="progress">
+        View Progress & Report 📈
 
-            <h3 class="text-3xl font-bold text-purple-600 mt-8 mb-4">Mastery Badges: 🏆</h3>
-            <div id="badgesDisplay" class="flex flex-wrap justify-center gap-4 mb-8"></div>
+        Your Expedition Log! ✨
 
-            <h3 class="text-3xl font-bold text-red-600 mt-8 mb-4">Areas to Re-Explore: 🚧</h3>
-            <ul id="troubledAreasList" class="list-disc list-inside text-xl text-gray-700 text-left w-full max-w-lg mx-auto"></ul>
+        Total Data Shards: <span id="progress-shards">0</span>
 
-            <button id="startStudySessionButton" class="btn btn-secondary mt-8 hidden">Start Study Session 📚</button>
-            <button id="backToLandingButton" class="btn btn-danger mt-4">Back to Lessons</button>
-            <button id="sendReportButton" class="btn btn-secondary mt-4">Share Report 📧</button>
-        </div>
+        Adventure Level: Beginner Explorer
 
-        <div id="studyModeScreen" class="screen">
-            <h2 class="section-title">Dora's Study Corner! 📚</h2>
-            <div id="studyModeContent" class="content-section flex flex-col items-center justify-center min-h-[200px] text-gray-700"></div>
-            <button id="backToProgressFromStudyButton" class="btn btn-danger mt-8">Back to Progress</button>
-        </div>
-    </div>
+        Daily Check-in Streak: 0 🔥
+
+        Mastery Badges: 🏆
+
+        Areas to Re-Explore: 🚧
+
+        <button onclick="resetProgress()">Reset Progress</button>
+        <a href="#">Back to Lessons</a>
+        <button>Share Report 📧</button>
+    </section>
+
+    <section id="basics">
+        Dora's Study Corner! 📚
+
+        BIDMAS Basics: BIDMAS stands for Brackets, Indices, Division/Multiplication, Addition/Subtraction. It's the order to solve math problems!
+
+        Brackets -> ()
+
+        Indices -> x² or 8²
+
+        Division -> ÷ or fraction
+
+        Multiplication -> ×
+
+        Addition -> +
+
+        Subtraction -> -
+
+        Example: 2 + 3 * 4 = 2 + 12 = 14 (Multiply first!)
+
+        <a href="#progress">Back to Progress</a>
+    </section>
+
+    <section id="practice">
+        Practice Challenges! 💪
+
+        Solve these BIDMAS homework problems:
+
+        <ol>
+            <li>
+                <span class="qnum" title="Calculate each using BIDMAS.">1.</span> Calculate the following using the correct order of operations.
+                <ul>
+                    <li>a. 6 + 3 × 4 <input class="answer-input" data-correct="18" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="6 + 3 × 4">I don't know</button> <span class="hint" style="display:none;">3 × 4 = 12, then 6 + 12 = 18</span></li>
+                    <li>b. 18 - 12 / 3 <input class="answer-input" data-correct="14" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="18 - 12 / 3">I don't know</button> <span class="hint" style="display:none;">12 / 3 = 4, then 18 - 4 = 14</span></li>
+                    <li>c. 8 + (-10) <input class="answer-input" data-correct="-2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="8 + (-10)">I don't know</button> <span class="hint" style="display:none;">8 - 10 = -2</span></li>
+                    <li>d. 17 - 3 + (-8) <input class="answer-input" data-correct="6" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="17 - 3 + (-8)">I don't know</button> <span class="hint" style="display:none;">17 - 3 = 14, 14 - 8 = 6</span></li>
+                </ul>
+            </li>
+            <li>
+                <span class="qnum" title="Evaluate each using BIDMAS.">2.</span> Evaluate the following expressions using the correct order of operations.
+                <ul>
+                    <li>a. 6 × (-9) <input class="answer-input" data-correct="-54" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="6 × (-9)">I don't know</button> <span class="hint" style="display:none;">6 × -9 = -54</span></li>
+                    <li>b. 72 × 8 - 7 <input class="answer-input" data-correct="569" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="72 × 8 - 7">I don't know</button> <span class="hint" style="display:none;">72 × 8 = 576, 576 - 7 = 569</span></li>
+                    <li>c. 7 + (-1) - 4 <input class="answer-input" data-correct="2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="7 + (-1) - 4">I don't know</button> <span class="hint" style="display:none;">7 - 1 = 6, 6 - 4 = 2</span></li>
+                    <li>d. (6 + 3) / 9 <input class="answer-input" data-correct="1" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="(6 + 3) / 9">I don't know</button> <span class="hint" style="display:none;">6 + 3 = 9, 9 / 9 = 1</span></li>
+                </ul>
+            </li>
+            <li>
+                <span class="qnum" title="Calculate each using BIDMAS.">3.</span> Calculate the following expressions using the correct order of operations. (only a and d)
+                <ul>
+                    <li>a. -12 + 2 × (-1) <input class="answer-input" data-correct="-14" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="-12 + 2 × (-1)">I don't know</button> <span class="hint" style="display:none;">2 × -1 = -2, -12 + -2 = -14</span></li>
+                    <li>d. (4 + 8 × 7) - 7 <input class="answer-input" data-correct="53" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="(4 + 8 × 7) - 7">I don't know</button> <span class="hint" style="display:none;">8 × 7 = 56, 4 + 56 = 60, 60 - 7 = 53</span></li>
+                </ul>
+            </li>
+            <li value="7">
+                <span class="qnum" title="Multiple choice using BIDMAS.">7.</span> The expression 6 + 2 × (5 - 10) / 2 is equal to: <br>
+                a. -15 b. -35 c. -60 d. 1 <br>
+                <input class="answer-input" data-correct="1" type="text" placeholder="Enter letter or number"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="6 + 2 × (5 - 10) / 2">I don't know</button> <span class="hint" style="display:none;">Brackets: 5 - 10 = -5, then 2 × -5 = -10, -10 / 2 = -5, 6 + -5 = 1</span>
+            </li>
+            <li value="9">
+                <span class="qnum" title="Word problem using BIDMAS.">9.</span> A submarine dives 100m below sea level, rises 60m, then dives 25m. Calculate its final position. <input class="answer-input" data-correct="-65" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="A submarine dives 100m below sea level, rises 60m, then dives 25m. Calculate its final position.">I don't know</button> <span class="hint" style="display:none;">Start at 0, -100 + 60 - 25 = -65m</span>
+            </li>
+            <li value="12">
+                <span class="qnum" title="Reasoning problem.">12.</span> Darcy says there is no difference between the expressions 8 - 2 × (4 + 2) and 8 - 2 × 4 + 2. Do you agree with Darcy? Justify your answer with correct working. <br>
+                <textarea class="answer-input" data-correct="no" style="width: 300px; height: 100px;"></textarea><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="Darcy says there is no difference between the expressions 8 - 2 × (4 + 2) and 8 - 2 × 4 + 2. Do you agree? Justify with working.">I don't know</button> <span class="hint" style="display:none;">First: 4 + 2 = 6, 2 × 6 = 12, 8 - 12 = -4. Second: 2 × 4 = 8, 8 - 8 + 2 = 2. Different, so no.</span>
+            </li>
+            <li value="15">
+                <span class="qnum" title="Word problem using BIDMAS.">15.</span> Ryan buys a vanilla cupcake at $3.75, 2 cinnamon donuts at $5.25 each, and 3 chocolate chip cookies at $2.50 each. Determine the total amount Ryan has to pay. <input class="answer-input" data-correct="21.75" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="idk" data-question="Ryan buys a vanilla cupcake at $3.75, 2 cinnamon donuts at $5.25 each, and 3 chocolate chip cookies at $2.50 each. Total?">I don't know</button> <span class="hint" style="display:none;">3.75 + (2 × 5.25) + (3 × 2.50) = 3.75 + 10.5 + 7.5 = 21.75</span>
+            </li>
+        </ol>
+
+        <button onclick="showHints()">Show All Hints</button>
+    </section>
 
     <script>
-        // Utility to sanitize HTML to prevent XSS
-        const sanitizeHTML = (str) => {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        };
+        let shards = 0;
 
-        // State Management Module
-        const StateManager = (() => {
-            let state = {
-                points: 0,
-                level: 1,
-                dailyStreak: 0,
-                lastPlayedDate: null,
-                badges: [],
-                troubledAreas: {},
-                sessionHistory: []
-            };
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Question copied to clipboard! Paste it into Grok AI (grok.x.ai) and ask for an explanation.');
+            }).catch(err => {
+                alert('Failed to copy: ' + err);
+            });
+        }
 
-            const save = () => localStorage.setItem('doraMathQuest', JSON.stringify(state));
-            const load = () => {
-                try {
-                    const saved = localStorage.getItem('doraMathQuest');
-                    if (saved) state = { ...state, ...JSON.parse(saved) };
-                    state.troubledAreas = state.troubledAreas || {};
-                    state.sessionHistory = state.sessionHistory || [];
-                    state.badges = state.badges || [];
-                } catch (e) {
-                    console.error('Error loading state:', e);
-                }
-            };
+        document.querySelectorAll('.idk').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const q = btn.dataset.question;
+                const prompt = `Explain how to solve ${q} using BIDMAS, step by step.`;
+                copyToClipboard(prompt);
+            });
+        });
 
-            const updateStreak = () => {
-                const today = new Date().toISOString().split('T')[0];
-                if (state.lastPlayedDate) {
-                    const last = new Date(state.lastPlayedDate);
-                    const diffDays = Math.round((new Date(today) - last) / (24 * 60 * 60 * 1000));
-                    if (today === state.lastPlayedDate) return;
-                    if (diffDays === 1) {
-                        state.dailyStreak++;
-                        UIHandler.showFeedback(`Streak! ${state.dailyStreak} days in a row! 🔥`, 'correct');
+        document.querySelectorAll('.check-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = btn.previousElementSibling.previousElementSibling;
+                const feedback = btn.nextElementSibling;
+                let userAnswer = input.value.trim().toLowerCase();
+                let correct = input.dataset.correct.toLowerCase();
+
+                if (input.tagName === 'TEXTAREA') {
+                    // For question 12, check if 'no' is in the answer
+                    if (userAnswer.includes('no')) {
+                        feedback.textContent = 'Correct!';
+                        feedback.classList.remove('wrong');
+                        updateShards();
                     } else {
-                        if (state.dailyStreak > 0) UIHandler.showFeedback('Streak Broken! Start a new one! 😔', 'incorrect');
-                        state.dailyStreak = 0;
+                        feedback.textContent = 'Try again!';
+                        feedback.classList.add('wrong');
                     }
-                }
-                state.lastPlayedDate = today;
-                if (UIHandler.elements.progress.streak) UIHandler.elements.progress.streak.textContent = state.dailyStreak;
-                save();
-            };
-
-            const updateLevel = () => {
-                const newLevel = Math.floor(state.points / 150) + 1;
-                if (newLevel > state.level) {
-                    UIHandler.showFeedback(`Level Up! You reached Level ${newLevel}! 🎉`, 'correct');
-                    state.level = newLevel;
-                }
-                if (UIHandler.elements.progress.level) UIHandler.elements.progress.level.textContent = getLevelName(state.level);
-            };
-
-            const unlockBadge = (id, name, emoji) => {
-                if (!state.badges.some(b => b.id === id)) {
-                    state.badges.push({ id, name, emoji });
-                    UIHandler.showFeedback(`New Badge Unlocked! ${name} ${emoji}`, 'correct');
-                    save();
-                    UIHandler.updateProgress();
-                }
-            };
-
-            return { state, save, load, updateStreak, updateLevel, unlockBadge };
-        })();
-
-        // UI Handler Module
-        const UIHandler = (() => {
-            const elements = {
-                appContainer: document.getElementById('appContainer'),
-                feedbackMessage: document.getElementById('feedbackMessage'),
-                screens: {
-                    landing: document.getElementById('fullLandingPageContent'),
-                    progress: document.getElementById('progressScreen'),
-                    study: document.getElementById('studyModeScreen')
-                },
-                progress: {
-                    points: document.getElementById('progressPoints'),
-                    level: document.getElementById('levelDisplay'),
-                    streak: document.getElementById('progressStreak'),
-                    badges: document.getElementById('badgesDisplay'),
-                    troubled: document.getElementById('troubledAreasList'),
-                    studyBtn: document.getElementById('startStudySessionButton')
-                }
-            };
-
-            let typesetQueue = [];
-            const typesetMath = () => {
-                if (window.MathJaxReady && typesetQueue.length) {
-                    window.MathJax.typesetPromise(typesetQueue)
-                        .then(() => typesetQueue = [])
-                        .catch(err => console.error('MathJax error:', err));
-                }
-            };
-
-            const debounceTypeset = () => {
-                cancelAnimationFrame(typesetMath.raf);
-                typesetMath.raf = requestAnimationFrame(typesetMath);
-            };
-
-            const showScreen = (screen) => {
-                Object.values(elements.screens).forEach(s => s.classList.remove('active'));
-                screen.classList.add('active');
-                screen.scrollTo({ top: 0, behavior: 'smooth' });
-                screen.focus();
-                typesetQueue.push(screen);
-                debounceTypeset();
-            };
-
-            const showFeedback = (message, type) => {
-                elements.feedbackMessage.textContent = message;
-                elements.feedbackMessage.className = `feedback-message show ${type === 'correct' ? 'bg-green-600 border-green-500' : 'bg-red-600 border-red-500'}`;
-                setTimeout(() => elements.feedbackMessage.className = 'feedback-message', 1800);
-            };
-
-            const updateProgress = () => {
-                const { points, level, dailyStreak, badges, troubledAreas } = StateManager.state;
-                elements.progress.points.textContent = points;
-                elements.progress.level.textContent = getLevelName(level);
-                elements.progress.streak.textContent = dailyStreak;
-
-                elements.progress.badges.innerHTML = badges.length
-                    ? badges.map(b => `<span class="p-3 bg-yellow-200 text-yellow-800 rounded-full shadow-md font-semibold text-base flex items-center gap-1">${b.emoji} ${sanitizeHTML(b.name)}</span>`).join('')
-                    : '<p class="text-gray-500 text-lg">No badges yet! Keep conquering quests!</p>';
-
-                const troubledTopics = Object.keys(troubledAreas).filter(t => troubledAreas[t] > 0);
-                elements.progress.troubled.innerHTML = troubledTopics.length
-                    ? troubledTopics.map(t => `<li class="mb-2">${sanitizeHTML(t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))} (Flagged: ${troubledAreas[t]} times)</li>`).join('')
-                    : '<p class="text-gray-500 text-lg">No areas to re-explore. Great job!</p>';
-
-                elements.progress.studyBtn.classList.toggle('hidden', !troubledTopics.length);
-            };
-
-            return { elements, showScreen, showFeedback, updateProgress, typesetQueue, debounceTypeset };
-        })();
-
-        // Content Renderer Module
-        const ContentRenderer = (() => {
-            const tutorialTopics = [
-                {
-                    id: 'bidmas_intro',
-                    title: 'What is BIDMAS? 🤔',
-                    steps: [
-                        { text: 'BIDMAS is our secret code to solve math problems! It tells us the correct order to do things.', emoji: '🔑' },
-                        { text: 'It stands for Brackets, Indices - \\(x^2\\) or \\(\\sqrt{}\\) - Division/Multiplication, Addition/Subtraction. Let\'s break it down!', emoji: '🔍' }
-                    ]
-                },
-                {
-                    id: 'bidmas_brackets',
-                    title: 'B is for Brackets! (\\( \\) )',
-                    steps: [
-                        { text: 'Always solve anything INSIDE brackets first. They\'re super important!', emoji: '🚧' },
-                        { text: 'Example: In \\(8-2\\times(4+2)\\), we solve \\((4+2)\\) first, which is \\(6\\).', example: '8-2\\times(4+2) \\rightarrow 8-2\\times6' }
-                    ]
-                },
-                {
-                    id: 'bidmas_indices',
-                    title: 'I is for Indices! (\\(x^2\\) or \\(\\sqrt{}\\))',
-                    steps: [
-                        { text: 'Indices are powers (like \\(x^2\\)) or square roots (\\(\\sqrt{}\\)). Do these next!', emoji: '📈' },
-                        { text: 'Example: In \\((-2)^3 - 3 \\times -2\\), we solve \\((-2)^3\\) first, which is \\(-8\\).', example: '(-2)^3 - 3 \\times -2 \\rightarrow -8 - 3 \\times -2' }
-                    ]
-                },
-                {
-                    id: 'bidmas_division_multiplication',
-                    title: 'DM is for Division & Multiplication! (\\(\\div \\times\\))',
-                    steps: [
-                        { text: 'These two are a team! Do them from left to right as they appear.', emoji: '➡️' },
-                        { text: 'Example: In \\(72\\div8\\times-3\\), we do \\(72\\div8\\) first, which is \\(9\\). Then \\(9\\times-3\\).', example: '72\\div8\\times-3 \\rightarrow 9\\times-3' }
-                    ]
-                },
-                {
-                    id: 'bidmas_addition_subtraction',
-                    title: 'AS is for Addition & Subtraction! (\\(+- \\))',
-                    steps: [
-                        { text: 'These are also a team! Do them last, from left to right as they appear.', emoji: '✅' },
-                        { text: 'Example: In \\(8-8+2\\), we do \\(8-8\\) first, which is \\(0\\). Then \\(0+2\\).', example: '8-8+2 \\rightarrow 0+2' }
-                    ]
-                },
-                {
-                    id: 'bidmas_full_example',
-                    title: 'Putting it all together!',
-                    steps: [
-                        { text: 'Let\'s try a full problem: \\(5\\times6-3+(5-2)\\).', example: '5\\times6-3+(5-2)' },
-                        { text: '1. Brackets: \\((5-2) = 3\\)', example: '5\\times6-3+3' },
-                        { text: '2. Multiplication: \\(5\\times6 = 30\\)', example: '30-3+3' },
-                        { text: '3. Subtraction/Addition (left to right): \\(30-3 = 27\\), then \\(27+3 = 30\\).', example: '30-3+3 \\rightarrow 27+3 \\rightarrow 30' },
-                        { text: 'You\'ve got this, Explorer!', emoji: '🌟' }
-                    ]
-                }
-            ];
-
-            const quizQuestions = [
-                { id: 'q1a', topic: 'calculations', question: '6+3\\times(-4)', answer: '-6', choices: ['-6', '36', '18', '12'] },
-                { id: 'q1b', topic: 'calculations', question: '18-\\frac{12}{-3}', answer: '22', choices: ['14', '22', '12', '10'] },
-                { id: 'q1c', topic: 'calculations', question: '8+(-4)-10', answer: '-6', choices: ['4', '-6', '-8', '6'] },
-                { id: 'q2b', topic: 'calculations', question: '72\\div8\\times(-3)', answer: '-27', choices: ['-27', '27', '-3', '3'] },
-                { id: 'q2c', topic: 'calculations', question: '7+(-3-4)', answer: '0', choices: ['0', '14', '-14', '7'] },
-                { id: 'q3b', topic: 'calculations', question: '-6\\times5-2\\times(-6)', answer: '-18', choices: ['-42', '-18', '18', '42'] },
-                { id: 'q4c', topic: 'indices', question: 'Evaluate: (-2)^3-3\\times(-2)', answer: '-2', choices: ['-2', '14', '-10', '2'] },
-                { id: 'q4b', topic: 'indices', question: 'Evaluate: -6-4+(-3)^2', answer: '-1', choices: ['-1', '11', '-19', '2'] },
-                { id: 'q5a', topic: 'indices', question: 'Evaluate: \\frac{-8}{2}+(-2)^2', answer: '0', choices: ['0', '-8', '4', '-2'] },
-                { id: 'q9', topic: 'word_problems', question: 'A submarine dives 100m (-100), rises 60m (+60), then dives 25m (-25). What is its final position (in meters)?', answer: '-65', choices: ['-65', '-15', '185', '35'] },
-                { id: 'q10', topic: 'word_problems', question: 'Jini has \\$2075. She makes 2 withdrawals of \\$150 each, then 5 deposits of \\$60 each. How much money does Jini have now?', answer: '2075', choices: ['1925', '2075', '2125', '1875'] },
-                { id: 'q11', topic: 'word_problems', question: 'A truck holds 156L diesel. After 4 days, 64L is left. What was the average fuel usage per day (in L)?', answer: '23', choices: ['23', '38', '15', '26'] },
-                { id: 'q16', topic: 'word_problems', question: 'A snail climbs 3cm (+3), slips back 2cm (-2), climbs 4cm (+4), and slips back 1cm (-1). How far is it from the bottom of the bucket?', answer: '4', choices: ['4', '10', '2', '6'] },
-                { id: 'q13a', topic: 'true_false', question: 'Is 5\\times6-3+(5-2) < 5\\times(6-3)+5-2 True or False?', answer: 'False', choices: ['True', 'False'] },
-                { id: 'q13b', topic: 'true_false', question: 'Is 2+(15\\div3)\\times1 = 2+15\\div(3\\times1) True or False?', answer: 'True', choices: ['True', 'False'] }
-            ];
-
-            const renderTutorial = () => {
-                const section = document.getElementById('tutorialSection');
-                section.innerHTML = '';
-                tutorialTopics.forEach(topic => {
-                    const div = document.createElement('div');
-                    div.className = 'content-section';
-                    div.innerHTML = `<h3>${sanitizeHTML(topic.title)}</h3>`;
-                    topic.steps.forEach(step => {
-                        div.innerHTML += `<p>${sanitizeHTML(step.text)}</p>`;
-                        if (step.example) div.innerHTML += `<div class="example-math">\\[${sanitizeHTML(step.example)}\\]</div>`;
-                        if (step.emoji) div.innerHTML += `<span class="emoji-display">${sanitizeHTML(step.emoji)}</span>`;
-                    });
-                    section.appendChild(div);
-                });
-                UIHandler.typesetQueue.push(section);
-                UIHandler.debounceTypeset();
-            };
-
-            const renderQuiz = () => {
-                const section = document.getElementById('practiceSection');
-                section.innerHTML = `<h3>Practice Challenges! 🧠</h3><p class="text-lg text-gray-600 mb-4 text-center">Answer the questions below to test your knowledge!</p>`;
-                quizQuestions.forEach((q, i) => {
-                    const item = document.createElement('div');
-                    item.className = 'question-item';
-                    item.dataset.questionId = q.id;
-                    item.innerHTML = `<p class="question-text">${i + 1}. \\(${sanitizeHTML(q.question)}\\)</p><div class="question-choices"></div><div class="feedback-area mt-4"></div>`;
-                    const choices = item.querySelector('.question-choices');
-                    const shuffled = [...q.choices].sort(() => Math.random() - 0.5);
-                    shuffled.forEach(c => {
-                        const btn = document.createElement('button');
-                        btn.className = 'choice-btn';
-                        btn.innerHTML = `\\(${sanitizeHTML(c)}\\)`;
-                        btn.dataset.choice = c;
-                        choices.appendChild(btn);
-                    });
-                    const skipBtn = document.createElement('button');
-                    skipBtn.className = 'skip-button choice-btn';
-                    skipBtn.textContent = "Don't Understand 💡";
-                    skipBtn.dataset.choice = "Don't Understand 💡";
-                    choices.appendChild(skipBtn);
-                    section.appendChild(item);
-                });
-                UIHandler.typesetQueue.push(section);
-                UIHandler.debounceTypeset();
-                StateManager.state.sessionHistory.push({
-                    date: new Date().toLocaleString(),
-                    type: 'worksheet_practice',
-                    questionsAttempted: 0,
-                    correctAnswers: 0,
-                    pointsEarned: 0,
-                    troubledTopics: [],
-                    durationMinutes: 0
-                });
-                StateManager.save();
-            };
-
-            const handleAnswer = (e, question, item) => {
-                const choice = e.target.dataset.choice;
-                const choices = item.querySelectorAll('.choice-btn');
-                choices.forEach(btn => btn.disabled = true);
-                const feedback = item.querySelector('.feedback-area');
-                const session = StateManager.state.sessionHistory[StateManager.state.sessionHistory.length - 1];
-
-                if (choice === "Don't Understand 💡") {
-                    UIHandler.showFeedback("Review the topics above!", "incorrect");
-                    feedback.innerHTML = `<p class="text-red-600 font-semibold">Review tutorials. Answer: \\(${sanitizeHTML(question.answer)}\\)</p>`;
-                    StateManager.state.troubledAreas[question.topic] = (StateManager.state.troubledAreas[question.topic] || 0) + 1;
-                    if (!session.troubledTopics.includes(question.topic)) session.troubledTopics.push(question.topic);
                 } else {
-                    const isCorrect = choice === question.answer;
-                    UIHandler.showFeedback(isCorrect ? "Correct! 🎉" : "Incorrect. 🤔", isCorrect ? "correct" : "incorrect");
-                    feedback.innerHTML = `<p class="${isCorrect ? 'text-green-600' : 'text-red-600'} font-semibold">${isCorrect ? 'Correct!' : `Incorrect. Answer: \\(${sanitizeHTML(question.answer)}\\)`}</p>`;
-                    if (isCorrect) {
-                        StateManager.state.points += 25;
-                        session.correctAnswers++;
-                        session.pointsEarned += 25;
-                        if (StateManager.state.troubledAreas[question.topic]) {
-                            StateManager.state.troubledAreas[question.topic]--;
-                            if (StateManager.state.troubledAreas[question.topic] === 0) delete StateManager.state.troubledAreas[question.topic];
-                        }
-                        e.target.classList.add('correct-animation');
-                        if (StateManager.state.points >= 100) StateManager.unlockBadge('first_math_master', 'First Math Master', '✨');
-                        if (StateManager.state.points >= 250) StateManager.unlockBadge('integer_navigator', 'Integer Navigator', '🧭');
+                    // For question 7, allow 'd' or '1'
+                    if (correct === '1' && (userAnswer === 'd' || userAnswer === '1')) {
+                        userAnswer = '1';
+                    }
+                    if (userAnswer === correct) {
+                        feedback.textContent = 'Correct!';
+                        feedback.classList.remove('wrong');
+                        updateShards();
                     } else {
-                        StateManager.state.troubledAreas[question.topic] = (StateManager.state.troubledAreas[question.topic] || 0) + 1;
-                        if (!session.troubledTopics.includes(question.topic)) session.troubledTopics.push(question.topic);
-                        e.target.classList.add('incorrect-animation');
+                        feedback.textContent = 'Try again!';
+                        feedback.classList.add('wrong');
                     }
                 }
-                session.questionsAttempted++;
-                StateManager.updateLevel();
-                StateManager.save();
-                UIHandler.updateProgress();
-                UIHandler.typesetQueue.push(feedback);
-                UIHandler.debounceTypeset();
-            };
-
-            const renderStudySession = () => {
-                const content = document.getElementById('studyModeContent');
-                content.innerHTML = `<div class="loading-indicator"><div class="loading-spinner"></div><p>Dora is preparing your lesson...</p></div>`;
-                setTimeout(() => {
-                    const troubledTopics = Object.keys(StateManager.state.troubledAreas).filter(t => StateManager.state.troubledAreas[t] > 0);
-                    if (!troubledTopics.length) {
-                        content.innerHTML = `<p class="text-lg text-gray-700">No troubled areas to study right now. Keep up the great work! 🌟</p>`;
-                        return;
-                    }
-                    const topic = troubledTopics.reduce((max, t) => StateManager.state.troubledAreas[t] > (StateManager.state.troubledAreas[max] || 0) ? t : max, troubledTopics[0]);
-                    const cleanTopic = topic.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    content.innerHTML = `
-                        <p class="text-lg text-gray-700">Let's review ${cleanTopic}! Follow the BIDMAS order: Brackets, Indices, Division/Multiplication, Addition/Subtraction.</p>
-                        <p class="text-lg text-gray-700">Example: For \\(6 + 3 \\times (-2)\\), multiply first: \\(3 \\times (-2) = -6\\), then add: \\(6 + (-6) = 0\\).</p>
-                        <p class="text-lg text-gray-700">Keep practicing, Explorer! You’re doing amazing! 🌟</p>
-                    `;
-                    UIHandler.typesetQueue.push(content);
-                    UIHandler.debounceTypeset();
-                }, 1000);
-            };
-
-            return { tutorialTopics, quizQuestions, renderTutorial, renderQuiz, handleAnswer, renderStudySession };
-        })();
-
-        // Utility Functions
-        const getLevelName = (level) => {
-            if (level < 3) return 'Novice Explorer';
-            if (level < 6) return 'Junior Navigator';
-            if (level < 10) return 'Equation Expert';
-            if (level < 15) return 'Formula Master';
-            return 'Integer Island Legend!';
-        };
-
-        const sendReport = () => {
-            const { points, level, dailyStreak, badges, troubledAreas, sessionHistory } = StateManager.state;
-            let report = `Hello,\n\nHere's your progress in Dora's Math Quest:\n\n`;
-            report += `Total Data Shards: ${points}\n`;
-            report += `Adventure Level: ${getLevelName(level)} (Level ${level})\n`;
-            report += `Daily Streak: ${dailyStreak} 🔥\n\n`;
-            report += '--- Mastery Badges ---\n';
-            report += badges.length ? badges.map(b => `${b.emoji} ${b.name}`).join('\n') : 'No badges yet.\n';
-            report += '\n--- Areas to Re-Explore ---\n';
-            const troubledTopics = Object.keys(troubledAreas).filter(t => troubledAreas[t] > 0);
-            report += troubledTopics.length ? troubledTopics.map(t => `- ${t.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} (Flagged ${troubledAreas[t]} times)`).join('\n') : 'No areas noted.\n';
-            report += '\n--- Recent History ---\n';
-            report += sessionHistory.length ? sessionHistory.map(s => `Date: ${s.date}\nType: ${s.type}\nQuestions: ${s.questionsAttempted}\nCorrect: ${s.correctAnswers}\nPoints: ${s.pointsEarned}\nTroubled: ${s.troubledTopics.join(', ') || 'None'}`).join('\n\n') : 'No sessions recorded.\n';
-            report += '\nKeep exploring with Dora!\n';
-            window.location.href = `mailto:?subject=${encodeURIComponent("Dora's Math Quest Report")}&body=${encodeURIComponent(report)}`;
-        };
-
-        // Event Delegation
-        document.addEventListener('click', (e) => {
-            if (e.target.matches('[data-nav="tutorial"]')) {
-                document.getElementById('tutorialSection').scrollIntoView({ behavior: 'smooth' });
-            } else if (e.target.matches('[data-nav="practice"]')) {
-                document.getElementById('practiceSection').scrollIntoView({ behavior: 'smooth' });
-            } else if (e.target.matches('#goToProgressButton')) {
-                UIHandler.showScreen(UIHandler.elements.screens.progress);
-                UIHandler.updateProgress();
-            } else if (e.target.matches('#startStudySessionButton')) {
-                UIHandler.showScreen(UIHandler.elements.screens.study);
-                ContentRenderer.renderStudySession();
-            } else if (e.target.matches('#backToLandingButton') || e.target.matches('#backToProgressFromStudyButton')) {
-                UIHandler.showScreen(UIHandler.elements.screens.landing);
-            } else if (e.target.matches('#sendReportButton')) {
-                sendReport();
-            } else if (e.target.matches('.choice-btn')) {
-                const item = e.target.closest('.question-item');
-                const qId = item.dataset.questionId;
-                const question = ContentRenderer.quizQuestions.find(q => q.id === qId);
-                if (question) ContentRenderer.handleAnswer(e, question, item);
-            }
+                feedback.style.display = 'inline';
+            });
         });
 
-        // Initialize
-        window.addEventListener('load', () => {
-            StateManager.load();
-            StateManager.updateStreak();
-            UIHandler.updateProgress();
-            ContentRenderer.renderTutorial();
-            ContentRenderer.renderQuiz();
-            setTimeout(() => {
-                if (!window.MathJaxReady) {
-                    UIHandler.elements.appContainer.prepend(
-                        Object.assign(document.createElement('p'), {
-                            className: 'text-red-600 text-center mt-4',
-                            textContent: 'Unable to load math renderer. Please refresh.'
-                        })
-                    );
-                }
-            }, 5000);
-        });
+        function updateShards() {
+            shards++;
+            document.getElementById('progress-shards').textContent = shards;
+        }
+
+        function resetProgress() {
+            shards = 0;
+            document.getElementById('progress-shards').textContent = shards;
+            document.querySelectorAll('.feedback').forEach(f => {
+                f.style.display = 'none';
+            });
+            document.querySelectorAll('.answer-input').forEach(i => {
+                i.value = '';
+            });
+        }
+
+        function showHints() {
+            document.querySelectorAll('.hint').forEach(h => {
+                h.style.display = 'inline';
+            });
+        }
     </script>
+
 </body>
 </html>
