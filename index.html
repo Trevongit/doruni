@@ -51,7 +51,6 @@
 
         <button onclick="resetProgress()">Reset Progress</button>
         <a href="#">Back to Lessons</a>
-        <button>Share Report 📧</button>
     </section>
 
     <section id="basics">
@@ -137,6 +136,7 @@
                 <div id="hint15" class="hint">Yummy math! Cupcake: 3.75. Donuts: 2 × 5.25 = 10.50. Cookies: 3 × 2.50 = 7.50. Add: 3.75 + 10.50 + 7.50 = 21.75. Multiply quantities first! 🍩</div>
             </li>
         </ol>
+        <button onclick="shareReport()">Share Report 📧</button>
     </section>
 
     <script>
@@ -203,7 +203,7 @@
 
         document.querySelectorAll('.check-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                const input = btn.previousElementSibling.previousElementSibling; // Navigate to input
+                const input = btn.previousElementSibling;
                 checkAnswer(input, btn);
             });
         });
@@ -211,7 +211,7 @@
         document.querySelectorAll('.answer-input').forEach(input => {
             input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    const btn = input.nextElementSibling; // Navigate to check button
+                    const btn = input.nextElementSibling;
                     checkAnswer(input, btn);
                 }
             });
@@ -242,6 +242,11 @@
             document.querySelectorAll('.hint').forEach(h => {
                 h.style.display = 'none';
             });
+        }
+
+        function shareReport() {
+            const report = `Total Shards: ${shards}\nAdventure Level: ${levels[currentLevel]}\nDaily Check-in Streak: 0\nMastery Badges: 🏆\nAreas to Re-Explore: 🚧`;
+            window.location.href = `mailto:trev2005+bilmas@gmail.com?subject=Dora's BIDMAS Report&body=${encodeURIComponent(report)}`;
         }
     </script>
 
