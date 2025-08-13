@@ -7,16 +7,16 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f0f8ff; color: #333; }
         header { text-align: center; }
-        section { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background-color: white; }
+        section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; background-color: white; border-radius: 10px; }
         .qnum { cursor: help; font-weight: bold; }
-        .idk { margin-left: 10px; cursor: pointer; background-color: #ffd700; border: none; padding: 5px; }
-        .hint-btn { margin-left: 10px; cursor: pointer; background-color: #90ee90; border: none; padding: 5px; }
-        .answer-input { margin-left: 10px; width: 100px; }
-        .check-btn { margin-left: 10px; cursor: pointer; background-color: #add8e6; border: none; padding: 5px; }
-        .feedback { margin-left: 10px; color: green; display: none; }
+        .idk { margin-left: 10px; cursor: pointer; background-color: #ffd700; border: none; padding: 6px 10px; border-radius: 5px; }
+        .hint-btn { margin-left: 10px; cursor: pointer; background-color: #90ee90; border: none; padding: 6px 10px; border-radius: 5px; }
+        .answer-input { margin-left: 10px; width: 100px; padding: 5px; border-radius: 5px; }
+        .check-btn { margin-left: 10px; cursor: pointer; background-color: #add8e6; border: none; padding: 6px 10px; border-radius: 5px; }
+        .feedback { margin-left: 10px; color: green; display: none; font-weight: bold; }
         .wrong { color: red; }
         #progress-shards { font-weight: bold; }
-        .hint { display: none; background-color: #fffacd; padding: 10px; margin-top: 10px; border: 1px solid #ccc; }
+        .hint { display: none; background-color: #fffacd; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 5px; }
         .fun-msg { color: #ff4500; font-weight: bold; }
     </style>
 </head>
@@ -57,11 +57,11 @@
     <section id="basics">
         Dora's Study Corner! 📚
 
-        BIDMAS Basics: Hey Dora, BIDMAS is like a secret code for solving math puzzles! It stands for Brackets, Indices, Division/Multiplication, Addition/Subtraction. We follow this order to get the right answer every time! 🎉
+        BIDMAS Basics: Hey Dora, BIDMAS is like a secret code for solving math puzzles! It stands for Brackets, Indices, Division/Multiplication, Addition/Subtraction. Follow this order to crack every math problem! 🎉
 
-        Brackets -> () First, do what's inside!
+        Brackets -> () Solve these first!
 
-        Indices -> x² or 8² Like powers!
+        Indices -> x² or 8² Like superpowers for numbers!
 
         Division -> ÷ or fractions
 
@@ -71,7 +71,7 @@
 
         Subtraction -> -
 
-        Example: 2 + 3 × 4. Multiply first: 3 × 4 = 12, then add: 2 + 12 = 14. Easy peasy! 😊
+        Example: 2 + 3 × 4. Do 3 × 4 = 12 first, then 2 + 12 = 14. You got this! 😊
 
         <a href="#progress">Back to Progress</a>
     </section>
@@ -79,62 +79,62 @@
     <section id="practice">
         Practice Challenges! 💪
 
-        Come on, Dora! Tackle these BIDMAS homework problems and collect shards! Each correct answer gives you a shard. Collect 10 to level up! 🚀
+        Dora, let's tackle these BIDMAS homework problems and collect shards! Each correct answer earns a shard. Get 10 to level up! 🚀
 
         <ol>
             <li>
                 <span class="qnum">1.</span> Calculate the following using the correct order of operations.
                 <ul>
                     <li>a. 6 + 3 × 4 <input class="answer-input" data-correct="18" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1a">Hint</button> <button class="idk" data-question="6 + 3 × 4">I don't know</button>
-                    <div id="hint1a" class="hint">Hey Dora! Let's solve 6 + 3 × 4 step by step using BIDMAS. First, no brackets or indices. Next, multiplication: 3 × 4 = 12. Then addition: 6 + 12 = 18. Remember, multiply before add! You're doing great! 🌟</div></li>
+                    <div id="hint1a" class="hint">Hey Dora! Let's solve 6 + 3 × 4 with BIDMAS. No brackets or indices, so multiply first: 3 × 4 = 12. Then add: 6 + 12 = 18. Multiplication comes before addition in BIDMAS! You're a star! 🌟</div></li>
                     <li>b. 18 - 12 / 3 <input class="answer-input" data-correct="14" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1b">Hint</button> <button class="idk" data-question="18 - 12 / 3">I don't know</button>
-                    <div id="hint1b" class="hint">Awesome, Dora! For 18 - 12 / 3: No brackets/indices. Division first: 12 / 3 = 4. Then subtract: 18 - 4 = 14. Division before subtraction! Keep going! 💪</div></li>
+                    <div id="hint1b" class="hint">Nice one, Dora! For 18 - 12 / 3: No brackets/indices. Division first: 12 / 3 = 4. Then subtract: 18 - 4 = 14. Division beats subtraction in BIDMAS! Keep it up! 💪</div></li>
                     <li>c. 8 + (-10) <input class="answer-input" data-correct="-2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1c">Hint</button> <button class="idk" data-question="8 + (-10)">I don't know</button>
-                    <div id="hint1c" class="hint">You got this, Dora! 8 + (-10) is like 8 - 10 = -2. Just addition with negative, no other operations to worry about. Simple! 😄</div></li>
+                    <div id="hint1c" class="hint">You're rocking it! 8 + (-10) is like 8 - 10 = -2. Just addition with a negative number, no other steps. Super simple! 😄</div></li>
                     <li>d. 17 - 3 + (-8) <input class="answer-input" data-correct="6" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1d">Hint</button> <button class="idk" data-question="17 - 3 + (-8)">I don't know</button>
-                    <div id="hint1d" class="hint">Super! 17 - 3 + (-8): All addition/subtraction, so left to right. 17 - 3 = 14, 14 + (-8) = 14 - 8 = 6. Negatives are tricky, but you nailed it! 🏆</div></li>
+                    <div id="hint1d" class="hint">Great work! 17 - 3 + (-8): All addition/subtraction, so go left to right. 17 - 3 = 14, then 14 + (-8) = 14 - 8 = 6. Negatives are no match for you! 🏆</div></li>
                 </ul>
             </li>
             <li>
                 <span class="qnum">2.</span> Evaluate the following expressions using the correct order of operations.
                 <ul>
                     <li>a. 6 × (-9) <input class="answer-input" data-correct="-54" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2a">Hint</button> <button class="idk" data-question="6 × (-9)">I don't know</button>
-                    <div id="hint2a" class="hint">Dora, let's do 6 × (-9): Just multiplication with negative: 6 × -9 = -54. No other steps! You're a math hero! ⚡</div></li>
+                    <div id="hint2a" class="hint">Dora, you're awesome! 6 × (-9): Just multiply: 6 × -9 = -54. No other steps since it's only multiplication. You're a math hero! ⚡</div></li>
                     <li>b. 72 × 8 - 7 <input class="answer-input" data-correct="569" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2b">Hint</button> <button class="idk" data-question="72 × 8 - 7">I don't know</button>
-                    <div id="hint2b" class="hint">Great job! 72 × 8 - 7: Multiply first: 72 × 8 = 576, then subtract: 576 - 7 = 569. BIDMAS rules! 🎈</div></li>
+                    <div id="hint2b" class="hint">Sweet! 72 × 8 - 7: Multiply first: 72 × 8 = 576, then subtract: 576 - 7 = 569. BIDMAS makes it clear! 🎈</div></li>
                     <li>c. 7 + (-1) - 4 <input class="answer-input" data-correct="2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2c">Hint</button> <button class="idk" data-question="7 + (-1) - 4">I don't know</button>
-                    <div id="hint2c" class="hint">Fun one! 7 + (-1) - 4: Left to right: 7 - 1 = 6, 6 - 4 = 2. Handling negatives like a pro! 😎</div></li>
+                    <div id="hint2c" class="hint">Fun one! 7 + (-1) - 4: Go left to right: 7 - 1 = 6, then 6 - 4 = 2. Negatives? No problem for you! 😎</div></li>
                     <li>d. (6 + 3) / 9 <input class="answer-input" data-correct="1" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2d">Hint</button> <button class="idk" data-question="(6 + 3) / 9">I don't know</button>
-                    <div id="hint2d" class="hint">Yay! (6 + 3) / 9: Brackets first: 6 + 3 = 9, then divide: 9 / 9 = 1. Brackets are key! 🔑</div></li>
+                    <div id="hint2d" class="hint">Yay! (6 + 3) / 9: Brackets first: 6 + 3 = 9, then divide: 9 / 9 = 1. Brackets rule in BIDMAS! 🔑</div></li>
                 </ul>
             </li>
             <li>
                 <span class="qnum">3.</span> Calculate the following expressions using the correct order of operations. (only a and d)
                 <ul>
                     <li>a. -12 + 2 × (-1) <input class="answer-input" data-correct="-14" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint3a">Hint</button> <button class="idk" data-question="-12 + 2 × (-1)">I don't know</button>
-                    <div id="hint3a" class="hint">Cool, Dora! -12 + 2 × (-1): Multiply first: 2 × -1 = -2, then add: -12 + -2 = -14. Multiples before adds! 🌈</div></li>
+                    <div id="hint3a" class="hint">Cool, Dora! -12 + 2 × (-1): Multiply first: 2 × -1 = -2, then add: -12 + -2 = -14. Multiplication before addition! 🌈</div></li>
                     <li>d. (4 + 8 × 7) - 7 <input class="answer-input" data-correct="53" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint3d">Hint</button> <button class="idk" data-question="(4 + 8 × 7) - 7">I don't know</button>
-                    <div id="hint3d" class="hint">Exciting! (4 + 8 × 7) - 7: Inside brackets, multiply first: 8 × 7 = 56, then 4 + 56 = 60. Then 60 - 7 = 53. BIDMAS in action! 🚀</div></li>
+                    <div id="hint3d" class="hint">Epic! (4 + 8 × 7) - 7: Inside brackets, multiply first: 8 × 7 = 56, then 4 + 56 = 60. Then subtract: 60 - 7 = 53. BIDMAS rocks! 🚀</div></li>
                 </ul>
             </li>
             <li value="7">
                 <span class="qnum">7.</span> The expression 6 + 2 × (5 - 10) / 2 is equal to: <br>
                 a. -15 b. -35 c. -60 d. 1 <br>
                 <input class="answer-input" data-correct="1" type="text" placeholder="Enter letter or number"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint7">Hint</button> <button class="idk" data-question="6 + 2 × (5 - 10) / 2">I don't know</button>
-                <div id="hint7" class="hint">Adventure time! 6 + 2 × (5 - 10) / 2: Brackets: 5 - 10 = -5. Then multiply: 2 × -5 = -10. Divide: -10 / 2 = -5. Add: 6 + -5 = 1. So d. 1! Well done! 🥳</div>
+                <div id="hint7" class="hint">Adventure time! 6 + 2 × (5 - 10) / 2: Brackets first: 5 - 10 = -5. Multiply: 2 × -5 = -10. Divide: -10 / 2 = -5. Add: 6 + -5 = 1. So d. 1! You're amazing! 🥳</div>
             </li>
             <li value="9">
                 <span class="qnum">9.</span> A submarine dives 100m below sea level, rises 60m, then dives 25m. Calculate its final position. <input class="answer-input" data-correct="-65" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint9">Hint</button> <button class="idk" data-question="A submarine dives 100m below sea level, rises 60m, then dives 25m. Calculate its final position.">I don't know</button>
-                <div id="hint9" class="hint">Underwater quest! Start at 0. Dives 100m: -100. Rises 60m: -100 + 60 = -40. Dives 25m: -40 - 25 = -65m. Negative means below sea level! 🌊</div>
+                <div id="hint9" class="hint">Underwater quest! Start at 0. Dives 100m: -100. Rises 60m: -100 + 60 = -40. Dives 25m: -40 - 25 = -65m. Below sea level! 🌊</div>
             </li>
             <li value="12">
                 <span class="qnum">12.</span> Darcy says there is no difference between the expressions 8 - 2 × (4 + 2) and 8 - 2 × 4 + 2. Do you agree with Darcy? Justify your answer with correct working. <br>
                 <textarea class="answer-input" data-correct="no" style="width: 300px; height: 100px;"></textarea><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint12">Hint</button> <button class="idk" data-question="Darcy says there is no difference between the expressions 8 - 2 × (4 + 2) and 8 - 2 × 4 + 2. Do you agree? Justify with working.">I don't know</button>
-                <div id="hint12" class="hint">Detective Dora! First: 8 - 2 × (4 + 2). Brackets: 4 + 2 = 6. Multiply: 2 × 6 = 12. Subtract: 8 - 12 = -4.<br>Second: 8 - 2 × 4 + 2. Multiply: 2 × 4 = 8. Then 8 - 8 + 2 = 2. Different! So no, brackets change everything! 🕵️‍♀️</div>
+                <div id="hint12" class="hint">Detective Dora! First: 8 - 2 × (4 + 2). Brackets: 4 + 2 = 6. Multiply: 2 × 6 = 12. Subtract: 8 - 12 = -4.<br>Second: 8 - 2 × 4 + 2. Multiply: 2 × 4 = 8. Then 8 - 8 + 2 = 2. Different answers, so no! Brackets matter! 🕵️‍♀️</div>
             </li>
             <li value="15">
                 <span class="qnum">15.</span> Ryan buys a vanilla cupcake at $3.75, 2 cinnamon donuts at $5.25 each, and 3 chocolate chip cookies at $2.50 each. Determine the total amount Ryan has to pay. <input class="answer-input" data-correct="21.75" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint15">Hint</button> <button class="idk" data-question="Ryan buys a vanilla cupcake at $3.75, 2 cinnamon donuts at $5.25 each, and 3 chocolate chip cookies at $2.50 each. Total?">I don't know</button>
-                <div id="hint15" class="hint">Yummy math! Cupcake: 3.75. Donuts: 2 × 5.25 = 10.50. Cookies: 3 × 2.50 = 7.50. Total: 3.75 + 10.50 + 7.50 = 21.75. Multiply quantities first! 🍩</div>
+                <div id="hint15" class="hint">Yummy math! Cupcake: 3.75. Donuts: 2 × 5.25 = 10.50. Cookies: 3 × 2.50 = 7.50. Add: 3.75 + 10.50 + 7.50 = 21.75. Multiply quantities first! 🍩</div>
             </li>
         </ol>
     </section>
@@ -146,10 +146,43 @@
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                alert('Question copied to clipboard! Paste it into Grok AI (grok.x.ai) and ask for an explanation.');
+                alert('Question copied to clipboard! Paste it into Grok AI (grok.x.ai) for a fun explanation!');
             }).catch(err => {
                 alert('Failed to copy: ' + err);
             });
+        }
+
+        function checkAnswer(input, btn) {
+            const feedback = btn.nextElementSibling;
+            let userAnswer = input.value.trim().toLowerCase();
+            let correct = input.dataset.correct.toLowerCase();
+            let isCorrect = false;
+
+            if (input.tagName === 'TEXTAREA') {
+                if (userAnswer.includes('no')) {
+                    isCorrect = true;
+                }
+            } else {
+                if (correct === '1' && (userAnswer === 'd' || userAnswer === '1' || userAnswer === 'd.1' || userAnswer === 'd 1')) {
+                    userAnswer = '1';
+                }
+                if (userAnswer === correct) {
+                    isCorrect = true;
+                }
+            }
+
+            if (isCorrect) {
+                feedback.textContent = 'Awesome, Dora! You nailed it! 🎉';
+                feedback.classList.remove('wrong');
+                if (!input.dataset.checked) {
+                    updateShards();
+                    input.dataset.checked = true;
+                }
+            } else {
+                feedback.textContent = 'Oops, not quite! Try again, you’ve got this! 💫';
+                feedback.classList.add('wrong');
+            }
+            feedback.style.display = 'inline';
         }
 
         document.querySelectorAll('.idk').forEach(btn => {
@@ -170,40 +203,17 @@
 
         document.querySelectorAll('.check-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                const input = btn.previousElementSibling.previousElementSibling; // Adjust if structure changes
-                const feedback = btn.nextElementSibling;
-                let userAnswer = input.value.trim().toLowerCase();
-                let correct = input.dataset.correct.toLowerCase();
+                const input = btn.previousElementSibling.previousElementSibling; // Navigate to input
+                checkAnswer(input, btn);
+            });
+        });
 
-                let isCorrect = false;
-
-                if (input.tagName === 'TEXTAREA') {
-                    // For question 12, check if 'no' is in the answer
-                    if (userAnswer.includes('no')) {
-                        isCorrect = true;
-                    }
-                } else {
-                    // For question 7, allow 'd' or '1'
-                    if (correct === '1' && (userAnswer === 'd' || userAnswer === '1' || userAnswer === 'd.1' || userAnswer === 'd 1')) {
-                        userAnswer = '1';
-                    }
-                    if (userAnswer === correct) {
-                        isCorrect = true;
-                    }
+        document.querySelectorAll('.answer-input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const btn = input.nextElementSibling; // Navigate to check button
+                    checkAnswer(input, btn);
                 }
-
-                if (isCorrect) {
-                    feedback.textContent = 'Correct! Great job, Dora! 🎉';
-                    feedback.classList.remove('wrong');
-                    if (!input.dataset.checked) {
-                        updateShards();
-                        input.dataset.checked = true;
-                    }
-                } else {
-                    feedback.textContent = 'Oops, try again! You can do it! 💫';
-                    feedback.classList.add('wrong');
-                }
-                feedback.style.display = 'inline';
             });
         });
 
@@ -213,7 +223,7 @@
             if (shards % 10 === 0 && currentLevel < levels.length - 1) {
                 currentLevel++;
                 document.getElementById('adventure-level').textContent = levels[currentLevel];
-                alert(`Level up! You're now a ${levels[currentLevel]}! Keep going, Dora! 🚀`);
+                alert(`Woo-hoo! Level up to ${levels[currentLevel]}! You're a BIDMAS superstar, Dora! 🚀`);
             }
         }
 
