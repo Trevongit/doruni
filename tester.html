@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adaptive Study Guide</title>
+  <style>
+    :root {
+      --bg: #0b0c0f;
+      --panel: #151822;
+      --text: #e8ecf1;
+      --muted: #aab2c0;
+      --brand: #6ecbff;
+      --accent: #a7f3d0;
+      --danger: #ff7b7b;
+      --warn: #ffd166;
+      --ok: #8be28b;
+      --border: #222634;
+      --shadow: 0 6px 22px rgba(0,0,0,0.35);
+      --focus: 0 0 0 3px rgba(110,203,255,0.35);
+    }
+    [data-theme="light"] {
+      --bg: #f7fafc;
+      --panel: #ffffff;
+      --text: #141824;
+      --muted: #4e5665;
+      --brand: #0066ff;
+      --accent: #0ea5e9;
+      --danger: #d1373f;
+      --warn: #b16200;
+      --ok: #067a3a;
+      --border: #e6eaf1;
+      --shadow: 0 4px 18px rgba(0,0,0,0.08);
+      --focus: 0 0 0 3px rgba(0,102,255,0.25);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(110,203,255,0.12), transparent 40%),
+                  radial-gradient(1000px 700px at 120% 20%, rgba(167,243,208,0.10), transparent 40%),
+                  var(--bg);
+      color: var(--text);
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; position: sticky; top: 0; z-index: 10;
+      background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0)) , transparent;
+      backdrop-filter: blur(6px);
+    }
+    .title {
+      display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px;
+    }
+    .badge {
+      font-size: 12px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+    }
+    .toolbar { display: flex; gap: 8px; align-items: center; }
+    button, .btn {
+      appearance: none; border: 1px solid var(--border); background: var(--panel); color: var(--text);
+      padding: 10px 14px; border-radius: 10px; cursor: pointer; box-shadow: var(--shadow);
+      transition: transform .04s ease, border-color .2s ease, background .2s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:focus-visible { outline: none; box-shadow: var(--shadow), var(--focus); }
+    .btn-ghost { background: transparent; }
+    .btn-brand { border-color: color-mix(in oklab, var(--brand), #000 10%); background: linear-gradient(180deg, color-mix(in oklab, var(--brand), #000 14%), color-mix(in oklab, var(--brand), #000 28%)); color: white; }
+    .btn-danger { border-color: color-mix(in oklab, var(--danger), #000 10%); background: linear-gradient(180deg, color-mix(in oklab, var(--danger), #000 14%), color-mix(in oklab, var(--danger), #000 28%)); color: white; }
+    .btn-outline { background: transparent; }
+    .layout {
+      display: grid; grid-template-columns: 320px 1fr; gap: 16px; padding: 0 20px 24px;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.06)), var(--panel);
+      border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: var(--shadow);
+    }
+    .sidebar .topic {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+      padding: 12px; border-radius: 12px; border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+      margin-bottom: 10px;
+    }
+    .topic h4 { margin: 0; font-size: 15px; }
+    .topic .meta { font-size: 12px; color: var(--muted); }
+    .bar {
+      height: 8px; width: 100%; background: #0f1220; border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
+    }
+    .fill { height: 100%; background: linear-gradient(90deg, var(--brand), var(--accent)); width: 0%; transition: width .4s ease; }
+    .main {
+      display: grid; gap: 16px;
+    }
+    .progress {
+      display: grid; gap: 8px;
+    }
+    .progress-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .progress small { color: var(--muted); }
+    .q-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;
+    }
+    .q-badge {
+      font-size: 12px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted);
+    }
+    .prompt { font-size: 20px; font-weight: 650; line-height: 1.35; margin: 6px 0 10px; }
+    .choices { display: grid; gap: 8px; }
+    .choice {
+      display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+    }
+    .choice input { margin-top: 4px; }
+    .input-wrap { display: flex; align-items: center; gap: 10px; }
+    input[type="text"], input[type="number"] {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel); color: var(--text);
+    }
+    .feedback {
+      padding: 12px; border-radius: 12px; border: 1px solid var(--border); margin-top: 10px;
+      background: linear-gradient(180deg, rgba(139, 226, 139, 0.08), rgba(0,0,0,0.03));
+    }
+    .feedback.bad { background: linear-gradient(180deg, rgba(255, 123, 123, 0.08), rgba(0,0,0,0.03)); }
+    .hint {
+      margin-top: 8px; font-size: 14px; color: var(--muted); border-left: 3px solid var(--brand); padding-left: 10px;
+    }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 12px; padding: 2px 6px; border: 1px solid var(--border); border-radius: 6px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .spacer { flex: 1; }
+    .muted { color: var(--muted); }
+    .tiny { font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3l8.66 5v8L12 21 3.34 16V8L12 3z" stroke="currentColor" stroke-width="1.4" />
+        <circle cx="12" cy="12" r="2.6" fill="currentColor" />
+      </svg>
+      <div>
+        <div>Adaptive Study Guide</div>
+        <div class="badge">Live practice • Autosaves</div>
+      </div>
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="App controls">
+      <button id="themeToggle" class="btn btn-outline" aria-pressed="false" title="Toggle theme">Toggle theme</button>
+      <button id="exportState" class="btn btn-outline" title="Export progress">Export</button>
+      <button id="reset" class="btn btn-danger" title="Reset all progress">Reset</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar card" aria-labelledby="sidebarTitle">
+      <h3 id="sidebarTitle" style="margin-top:0">Study plan</h3>
+      <p class="tiny">Focus areas update after every question.</p>
+      <div id="topics"></div>
+      <div class="card" style="margin-top:10px">
+        <div><strong>Tip:</strong> Press <span class="kbd">Enter</span> to submit, <span class="kbd">N</span> for next.</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="card progress" aria-labelledby="progressTitle">
+        <div class="progress-row">
+          <h3 id="progressTitle" style="margin:0">Progress</h3>
+          <div class="spacer"></div>
+          <div class="tiny">Streak: <span id="streak">0</span> • Correct: <span id="correct">0</span>/<span id="answered">0</span></div>
+        </div>
+        <div class="bar" aria-hidden="true"><div id="progressFill" class="fill" style="width:0%"></div></div>
+        <small>Session progress adapts to your pace.</small>
+      </section>
+
+      <section id="questionCard" class="card" aria-live="polite" aria-atomic="true">
+        <!-- Dynamic question content will render here -->
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ---------- Question bank (sample: Foundational Math) ----------
+    const questionBank = [
+      // Fractions (1–3)
+      {
+        id: 'frac-1', topic: 'Fractions', difficulty: 1, type: 'input',
+        prompt: 'Simplify the fraction 6/8.',
+        answer: ['3/4', '0.75', '¾'],
+        normalize: v => v.replace(/\s/g,'').replace('¾','3/4'),
+        explanation: 'Divide numerator and denominator by their GCD (2): 6/8 → 3/4.',
+        hint: 'Find the greatest common divisor of 6 and 8, then divide both by it.'
+      },
+      {
+        id: 'frac-2', topic: 'Fractions', difficulty: 2, type: 'mcq',
+        prompt: 'What is 2/3 + 1/6?',
+        choices: ['1/2', '5/6', '3/4', '7/6'],
+        correctIndex: 1,
+        explanation: 'Common denominator 6 → 4/6 + 1/6 = 5/6.',
+        hint: 'Convert 2/3 to sixths before adding.'
+      },
+      {
+        id: 'frac-3', topic: 'Fractions', difficulty: 3, type: 'mcq',
+        prompt: 'Which is larger?',
+        choices: ['3/5', '5/9'],
+        correctIndex: 0,
+        explanation: 'Compare 3/5 = 0.6 and 5/9 ≈ 0.555… so 3/5 is larger.',
+        hint: 'Cross-multiply: 3×9 vs 5×5.'
+      },
+      // Algebra (1–3)
+      {
+        id: 'alg-1', topic: 'Algebra', difficulty: 1, type: 'input',
+        prompt: 'Solve for x: x + 5 = 9.',
+        answer: ['4'],
+        normalize: v => v.trim(),
+        explanation: 'Subtract 5 from both sides: x = 9 − 5 = 4.',
+        hint: 'Undo the +5 with −5 on both sides.'
+      },
+      {
+        id: 'alg-2', topic: 'Algebra', difficulty: 2, type: 'input',
+        prompt: 'Solve for x: 2x = 14.',
+        answer: ['7'],
+        normalize: v => v.trim(),
+        explanation: 'Divide both sides by 2: x = 7.',
+        hint: 'Isolate x by dividing by 2.'
+      },
+      {
+        id: 'alg-3', topic: 'Algebra', difficulty: 3, type: 'input',
+        prompt: 'Expand (x + 3)^2.',
+        answer: ['x^2+6x+9'],
+        normalize: v => v.toLowerCase().replace(/\s/g,'').replace(/\*\*/g,'^').replace(/(\bx)(?=[^a-z^0-9])/g,'x'),
+        explanation: '(x + 3)^2 = x^2 + 2·x·3 + 3^2 = x^2 + 6x + 9.',
+        hint: 'Use (a+b)^2 = a^2 + 2ab + b^2.'
+      },
+      // Geometry (1–3)
+      {
+        id: 'geo-1', topic: 'Geometry', difficulty: 1, type: 'input',
+        prompt: 'What is the sum of the interior angles of a triangle (in degrees)?',
+        answer: ['180'],
+        normalize: v => v.replace(/\s/g,''),
+        explanation: 'Interior angles in any triangle sum to 180°.',
+        hint: 'Think of a straight line.'
+      },
+      {
+        id: 'geo-2', topic: 'Geometry', difficulty: 2, type: 'input',
+        prompt: 'Area of a rectangle with sides 5 and 3:',
+        answer: ['15'],
+        normalize: v => v.trim(),
+        explanation: 'Area = length × width = 5 × 3 = 15.',
+        hint: 'Multiply the two side lengths.'
+      },
+      {
+        id: 'geo-3', topic: 'Geometry', difficulty: 3, type: 'input',
+        prompt: 'Right triangle with legs 3 and 4. Find the hypotenuse.',
+        answer: ['5'],
+        normalize: v => v.trim(),
+        explanation: 'By Pythagoras: √(3^2 + 4^2) = √25 = 5.',
+        hint: 'Use c = √(a^2 + b^2).'
+      },
+    ];
+
+    // ---------- State & persistence ----------
+    const defaultTopics = [...new Set(questionBank.map(q => q.topic))];
+    const defaultState = {
+      topics: Object.fromEntries(defaultTopics.map(t => [t, {
+        proficiency: 50,  // 0–100
+        difficulty: 2,    // 1–3 starting mid
+        lastWrongCount: 0
+      }])),
+      asked: [], answered: 0, correct: 0, streak: 0,
+      theme: 'auto',
+      history: [] // {id, topic, correct, difficulty, timestamp}
+    };
+
+    const STORAGE_KEY = 'studyState-v1';
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(defaultState);
+        const parsed = JSON.parse(raw);
+        // Ensure new topics/fields exist
+        defaultTopics.forEach(t => {
+          if (!parsed.topics[t]) parsed.topics[t] = { proficiency: 50, difficulty: 2, lastWrongCount: 0 };
+        });
+        return parsed;
+      } catch {
+        return structuredClone(defaultState);
+      }
+    }
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    }
+    function resetState() {
+      state = structuredClone(defaultState);
+      saveState(); render();
+    }
+
+    // ---------- Utility ----------
+    const byTopic = topic => questionBank.filter(q => q.topic === topic);
+    function shuffle(arr) { return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
+    function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+    function pickNextQuestion() {
+      // Prefer weakest topic; tie-break by higher difficulty to keep it interesting
+      const topicsSorted = defaultTopics
+        .map(t => ({ t, p: state.topics[t].proficiency }))
+        .sort((a,b) => a.p - b.p || state.topics[b.t].difficulty - state.topics[a.t].difficulty)
+        .map(o => o.t);
+
+      // If last answer was wrong twice in a row for a topic, force remedial there
+      const forceTopic = topicsSorted.find(t => state.topics[t].lastWrongCount >= 2) || topicsSorted[0];
+      const targetDifficulty = state.topics[forceTopic].difficulty;
+
+      // Try unseen at target difficulty first
+      let pool = byTopic(forceTopic).filter(q => q.difficulty === targetDifficulty && !state.asked.includes(q.id));
+      if (pool.length === 0) {
+        // Fallback: any difficulty in topic not overused
+        const askedSet = new Set(state.asked.slice(-8)); // avoid very recent repeats
+        pool = byTopic(forceTopic).filter(q => !askedSet.has(q.id));
+      }
+      if (pool.length === 0) {
+        // As a last resort, anything in bank
+        pool = questionBank;
+      }
+      return shuffle(pool)[0];
+    }
+
+    // ---------- Rendering ----------
+    const elTopics = document.getElementById('topics');
+    const elCard = document.getElementById('questionCard');
+    const elStreak = document.getElementById('streak');
+    const elAnswered = document.getElementById('answered');
+    const elCorrect = document.getElementById('correct');
+    const elProgressFill = document.getElementById('progressFill');
+
+    function renderTopics() {
+      elTopics.innerHTML = '';
+      const rows = defaultTopics.map(topic => {
+        const t = state.topics[topic];
+        const wrap = document.createElement('div');
+        wrap.className = 'topic';
+        const h = document.createElement('div');
+        h.innerHTML = `<h4>${topic}</h4><div class="meta">Proficiency ${Math.round(t.proficiency)} • D${t.difficulty}</div>`;
+        const badge = document.createElement('div');
+        const label = t.proficiency < 45 ? 'Focus' : t.proficiency > 75 ? 'Strong' : 'Steady';
+        const color = t.proficiency < 45 ? 'var(--warn)' : t.proficiency > 75 ? 'var(--ok)' : 'var(--muted)';
+        badge.innerHTML = `<span class="q-badge" style="color:${color}">${label}</span>`;
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        const fill = document.createElement('div');
+        fill.className = 'fill';
+        fill.style.width = clamp(t.proficiency, 0, 100) + '%';
+        bar.appendChild(fill);
+        wrap.appendChild(h); wrap.appendChild(badge); wrap.appendChild(bar);
+        return wrap;
+      });
+      rows.forEach(r => elTopics.appendChild(r));
+    }
+
+    function renderProgress() {
+      elStreak.textContent = state.streak;
+      elAnswered.textContent = state.answered;
+      elCorrect.textContent = state.correct;
+      const pct = state.answered ? clamp((state.correct / state.answered) * 100, 0, 100) : 0;
+      elProgressFill.style.width = pct + '%';
+      elProgressFill.title = `Accuracy ${Math.round(pct)}%`;
+    }
+
+    let current = null;
+    let locked = false;
+
+    function renderQuestion() {
+      current = pickNextQuestion();
+      if (!state.asked.includes(current.id)) state.asked.push(current.id);
+      saveState();
+
+      const tState = state.topics[current.topic];
+      elCard.innerHTML = '';
+
+      const header = document.createElement('div');
+      header.className = 'q-header';
+      header.innerHTML = `
+        <div class="row">
+          <span class="q-badge">Topic: ${current.topic}</span>
+          <span class="q-badge">Difficulty: ${current.difficulty}</span>
+        </div>
+        <div class="row">
+          <button class="btn btn-ghost" id="hintBtn">Hint</button>
+          <button class="btn btn-ghost" id="skipBtn" title="Skip this question">Skip</button>
+        </div>
+      `;
+      const prompt = document.createElement('div');
+      prompt.className = 'prompt';
+      prompt.textContent = current.prompt;
+
+      const form = document.createElement('form');
+      form.setAttribute('aria-label', 'Answer form');
+      const container = document.createElement('div');
+
+      if (current.type === 'mcq') {
+        container.className = 'choices';
+        current.choices.forEach((choice, idx) => {
+          const label = document.createElement('label');
+          label.className = 'choice';
+          label.innerHTML = `
+            <input type="radio" name="choice" value="${idx}" />
+            <div>${choice}</div>
+          `;
+          container.appendChild(label);
+        });
+      } else if (current.type === 'input') {
+        const wrap = document.createElement('div');
+        wrap.className = 'input-wrap';
+        wrap.innerHTML = `<input id="freeInput" type="text" autocomplete="off" placeholder="Type your answer…" aria-label="Your answer" />`;
+        container.appendChild(wrap);
+      }
+
+      const controls = document.createElement('div');
+      controls.className = 'row';
+      controls.style.marginTop = '10px';
+      controls.innerHTML = `
+        <button class="btn btn-brand" type="submit" id="submitBtn">Submit</button>
+        <button class="btn btn-outline" type="button" id="nextBtn" disabled>Next</button>
+        <div class="spacer"></div>
+        <span class="tiny muted">Topic proficiency: ${Math.round(tState.proficiency)}</span>
+      `;
+
+      const feedback = document.createElement('div');
+      feedback.id = 'feedback';
+      feedback.setAttribute('role', 'status');
+      feedback.setAttribute('aria-live', 'polite');
+
+      elCard.appendChild(header);
+      elCard.appendChild(prompt);
+      form.appendChild(container);
+      form.appendChild(controls);
+      form.appendChild(feedback);
+      elCard.appendChild(form);
+
+      // Handlers
+      const submitBtn = controls.querySelector('#submitBtn');
+      const nextBtn = controls.querySelector('#nextBtn');
+      const hintBtn = header.querySelector('#hintBtn');
+      const skipBtn = header.querySelector('#skipBtn');
+
+      hintBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showHint();
+      });
+      skipBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        tState.lastWrongCount = 0; // neutral on skip
+        locked = false; // ensure reset
+        renderQuestion();
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (locked) return;
+        const result = checkAnswer(current, form);
+        handleOutcome(result.correct, result.userAnswer, feedback, nextBtn);
+      });
+      nextBtn.addEventListener('click', () => {
+        if (locked) { locked = false; renderQuestion(); }
+      });
+
+      // Keyboard helpers
+      document.onkeydown = (e) => {
+        if (e.key === 'n' || e.key === 'N') {
+          if (!nextBtn.disabled) nextBtn.click();
+        }
+      };
+      // Focus input if available
+      const fi = form.querySelector('#freeInput');
+      if (fi) fi.focus();
+    }
+
+    // ---------- Answer checking & adaptation ----------
+    function normalize
