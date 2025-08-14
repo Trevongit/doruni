@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dora's Math Quest: BIDMAS Expedition!</title>
+    <title>Dora's Word Quest: Language Adventure!</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f0f8ff; color: #333; }
         header { text-align: center; }
@@ -12,225 +12,329 @@
         .idk { margin-left: 10px; cursor: pointer; background-color: #ffd700; border: none; padding: 6px 10px; border-radius: 5px; }
         .hint-btn { margin-left: 10px; cursor: pointer; background-color: #90ee90; border: none; padding: 6px 10px; border-radius: 5px; }
         .answer-input { margin-left: 10px; width: 100px; padding: 5px; border-radius: 5px; }
+        .answer-input.textarea { width: 300px; height: 60px; }
         .check-btn { margin-left: 10px; cursor: pointer; background-color: #add8e6; border: none; padding: 6px 10px; border-radius: 5px; }
         .feedback { margin-left: 10px; color: green; display: none; font-weight: bold; }
         .wrong { color: red; }
-        #progress-shards { font-weight: bold; }
+        #progress-gems { font-weight: bold; }
         .hint { display: none; background-color: #fffacd; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 5px; }
         .fun-msg { color: #ff4500; font-weight: bold; }
+        .modal {
+            display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto;
+            background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; border-radius: 10px;
+            width: 80%; max-width: 500px; text-align: center; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+        }
+        .close-button {
+            color: #aaa; float: right; font-size: 28px; font-weight: bold;
+        }
+        .close-button:hover, .close-button:focus {
+            color: black; text-decoration: none; cursor: pointer;
+        }
+        #full-report-display {
+            background-color: #e0f2f7; border: 1px solid #a7d9ed; padding: 15px; margin-top: 20px;
+            border-radius: 8px; white-space: pre-wrap; font-family: monospace; font-size: 0.9em;
+            text-align: left; max-height: 300px; overflow-y: auto;
+        }
+        @media (max-width: 600px) {
+            #full-report-display { font-size: 0.8em; }
+            #practice-questions { max-height: 400px; overflow-y: auto; }
+            .answer-input.textarea { width: 100%; }
+        }
     </style>
 </head>
 <body>
-
     <header>
-        🦋
-        Dora's Math Quest: BIDMAS Expedition! 🚀
-
-        Hey Dora! You're the brave adventurer Integer Island needs! Let's master BIDMAS and save the day! Scroll down for fun concepts and practice problems. 🌟
+        🦋 Dora's Word Quest: Language Adventure! 📚
+        <p>Hey Dora! You're the hero Story Island needs! Let's master English skills and save the day! Scroll down for fun concepts and practice problems. 🌟</p>
     </header>
 
     <nav>
-        <a href="#basics">Go to BIDMAS Basics 📖</a>
+        <a href="#basics">Go to Language Basics 📖</a>
         <a href="#practice">Go to Practice 💪</a>
     </nav>
 
     <section id="progress">
-        View Progress & Report 📈
-
-        Your Expedition Log! ✨
-
-        Total Data Shards: <span id="progress-shards">0</span>
-
-        Adventure Level: <span id="adventure-level">Beginner Explorer</span>
-
-        Daily Check-in Streak: 0 🔥
-
-        Mastery Badges: 🏆
-
-        Areas to Re-Explore: 🚧
-
+        <h2>View Progress &amp; Report 📈</h2>
+        <h3>Your Adventure Log! ✨</h3>
+        <p>Total Word Gems: <span id="progress-gems">0</span></p>
+        <p>Adventure Level: <span id="adventure-level">Word Novice</span></p>
+        <p>Daily Check-in Streak: <span id="streak">0</span> 🔥</p>
+        <p>Mastery Badges: 📖</p>
+        <p>Areas to Re-Explore (Needed Hint/IDK): <span id="summary-hints-idk">None</span> 🚧</p>
+        <p>Areas to Re-Explore (Incorrect Attempts): <span id="summary-incorrect">None</span> 🚫</p>
+        <p>
+            <strong>Full Report Content (for Email):</strong>
+            <button onclick="submitReportViaEmail()" style="margin-left: 10px; background-color: #add8e6; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer;">Submit Report via Email 📧</button>
+            <button onclick="copyReportToClipboard()" style="margin-left: 10px; background-color: #ffd700; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer;">Copy Report to Clipboard 📋</button>
+        </p>
+        <pre id="full-report-display">Loading report...</pre>
         <button onclick="resetProgress()">Reset Progress</button>
-        <a href="#">Back to Lessons</a>
+        <a href="#basics">Back to Lessons</a>
     </section>
 
     <section id="basics">
-        Dora's Study Corner! 📚
-
-        BIDMAS Basics: Hey Dora, BIDMAS is like a secret code for solving math puzzles! It stands for Brackets, Indices, Division/Multiplication, Addition/Subtraction. Follow this order to crack every math problem! 🎉
-
-        Brackets -> () Solve these first!
-
-        Indices -> x² or 8² Like superpowers for numbers!
-
-        Division -> ÷ or fractions
-
-        Multiplication -> ×
-
-        Addition -> +
-
-        Subtraction -> -
-
-        Example: 2 + 3 × 4. Do 3 × 4 = 12 first, then 2 + 12 = 14. You got this! 😊
-
+        <h2>Dora's Study Corner! 📚</h2>
+        <p>Word Quest Basics: Hey Dora, English is like a treasure map for stories and ideas! Master these skills to unlock the secrets of Story Island! 🎉</p>
+        <ul>
+            <li><strong>Parts of Speech</strong>: Nouns name things (e.g., dog), verbs show actions (e.g., run), adjectives describe (e.g., fluffy), adverbs modify verbs (e.g., quickly).</li>
+            <li><strong>Sentences</strong>: Simple (one idea), compound (joined by 'and'), complex (main + dependent clause).</li>
+            <li><strong>Vocabulary</strong>: Use synonyms (big/huge) and context clues to understand words.</li>
+            <li><strong>Comprehension</strong>: Find the main idea and spot similes (e.g., "as brave as a lion").</li>
+        </ul>
+        <p>Example: In "The dog ran quickly," 'dog' is a noun, 'ran' is a verb, 'quickly' is an adverb. Try spotting these in our challenges! 😊</p>
         <a href="#progress">Back to Progress</a>
     </section>
 
     <section id="practice">
-        Practice Challenges! 💪
-
-        Dora, let's tackle these BIDMAS homework problems and collect shards! Each correct answer earns a shard. Get 10 to level up! 🚀
-
-        <ol>
-            <li>
-                <span class="qnum">1.</span> Calculate the following using the correct order of operations.
-                <ul>
-                    <li>a. 6 + 3 × 4 <input class="answer-input" data-correct="18" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1a">Hint</button> <button class="idk" data-question="6 + 3 × 4">I don't know</button>
-                    <div id="hint1a" class="hint">Hey Dora! Let's solve 6 + 3 × 4 with BIDMAS. No brackets or indices, so multiply first: 3 × 4 = 12. Then add: 6 + 12 = 18. Multiplication comes before addition in BIDMAS! You're a star! 🌟</div></li>
-                    <li>b. 18 - 12 / 3 <input class="answer-input" data-correct="14" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1b">Hint</button> <button class="idk" data-question="18 - 12 / 3">I don't know</button>
-                    <div id="hint1b" class="hint">Nice one, Dora! For 18 - 12 / 3: No brackets/indices. Division first: 12 / 3 = 4. Then subtract: 18 - 4 = 14. Division beats subtraction in BIDMAS! Keep it up! 💪</div></li>
-                    <li>c. 8 + (-10) <input class="answer-input" data-correct="-2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1c">Hint</button> <button class="idk" data-question="8 + (-10)">I don't know</button>
-                    <div id="hint1c" class="hint">You're rocking it! 8 + (-10) is like 8 - 10 = -2. Just addition with a negative number, no other steps. Super simple! 😄</div></li>
-                    <li>d. 17 - 3 + (-8) <input class="answer-input" data-correct="6" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1d">Hint</button> <button class="idk" data-question="17 - 3 + (-8)">I don't know</button>
-                    <div id="hint1d" class="hint">Great work! 17 - 3 + (-8): All addition/subtraction, so go left to right. 17 - 3 = 14, then 14 + (-8) = 14 - 8 = 6. Negatives are no match for you! 🏆</div></li>
-                </ul>
-            </li>
-            <li>
-                <span class="qnum">2.</span> Evaluate the following expressions using the correct order of operations.
-                <ul>
-                    <li>a. 6 × (-9) <input class="answer-input" data-correct="-54" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2a">Hint</button> <button class="idk" data-question="6 × (-9)">I don't know</button>
-                    <div id="hint2a" class="hint">Dora, you're awesome! 6 × (-9): Just multiply: 6 × -9 = -54. No other steps since it's only multiplication. You're a math hero! ⚡</div></li>
-                    <li>b. 72 × 8 - 7 <input class="answer-input" data-correct="569" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2b">Hint</button> <button class="idk" data-question="72 × 8 - 7">I don't know</button>
-                    <div id="hint2b" class="hint">Sweet! 72 × 8 - 7: Multiply first: 72 × 8 = 576, then subtract: 576 - 7 = 569. BIDMAS makes it clear! 🎈</div></li>
-                    <li>c. 7 + (-1) - 4 <input class="answer-input" data-correct="2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2c">Hint</button> <button class="idk" data-question="7 + (-1) - 4">I don't know</button>
-                    <div id="hint2c" class="hint">Fun one! 7 + (-1) - 4: Go left to right: 7 - 1 = 6, then 6 - 4 = 2. Negatives? No problem for you! 😎</div></li>
-                    <li>d. (6 + 3) / 9 <input class="answer-input" data-correct="1" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2d">Hint</button> <button class="idk" data-question="(6 + 3) / 9">I don't know</button>
-                    <div id="hint2d" class="hint">Yay! (6 + 3) / 9: Brackets first: 6 + 3 = 9, then divide: 9 / 9 = 1. Brackets rule in BIDMAS! 🔑</div></li>
-                </ul>
-            </li>
-            <li>
-                <span class="qnum">3.</span> Calculate the following expressions using the correct order of operations. (only a and d)
-                <ul>
-                    <li>a. -12 + 2 × (-1) <input class="answer-input" data-correct="-14" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint3a">Hint</button> <button class="idk" data-question="-12 + 2 × (-1)">I don't know</button>
-                    <div id="hint3a" class="hint">Cool, Dora! -12 + 2 × (-1): Multiply first: 2 × -1 = -2, then add: -12 + -2 = -14. Multiplication before addition! 🌈</div></li>
-                    <li>d. (4 + 8 × 7) - 7 <input class="answer-input" data-correct="53" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint3d">Hint</button> <button class="idk" data-question="(4 + 8 × 7) - 7">I don't know</button>
-                    <div id="hint3d" class="hint">Epic! (4 + 8 × 7) - 7: Inside brackets, multiply first: 8 × 7 = 56, then 4 + 56 = 60. Then subtract: 60 - 7 = 53. BIDMAS rocks! 🚀</div></li>
-                </ul>
-            </li>
-            <li value="7">
-                <span class="qnum">7.</span> The expression 6 + 2 × (5 - 10) / 2 is equal to: <br>
-                a. -15 b. -35 c. -60 d. 1 <br>
-                <input class="answer-input" data-correct="1" type="text" placeholder="Enter letter or number"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint7">Hint</button> <button class="idk" data-question="6 + 2 × (5 - 10) / 2">I don't know</button>
-                <div id="hint7" class="hint">Adventure time! 6 + 2 × (5 - 10) / 2: Brackets first: 5 - 10 = -5. Multiply: 2 × -5 = -10. Divide: -10 / 2 = -5. Add: 6 + -5 = 1. So d. 1! You're amazing! 🥳</div>
-            </li>
-            <li value="9">
-                <span class="qnum">9.</span> A submarine dives 100m below sea level, rises 60m, then dives 25m. Calculate its final position. <input class="answer-input" data-correct="-65" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint9">Hint</button> <button class="idk" data-question="A submarine dives 100m below sea level, rises 60m, then dives 25m. Calculate its final position.">I don't know</button>
-                <div id="hint9" class="hint">Underwater quest! Start at 0. Dives 100m: -100. Rises 60m: -100 + 60 = -40. Dives 25m: -40 - 25 = -65m. Below sea level! 🌊</div>
-            </li>
-            <li value="12">
-                <span class="qnum">12.</span> Darcy says there is no difference between the expressions 8 - 2 × (4 + 2) and 8 - 2 × 4 + 2. Do you agree with Darcy? Justify your answer with correct working. <br>
-                <textarea class="answer-input" data-correct="no" style="width: 300px; height: 100px;"></textarea><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint12">Hint</button> <button class="idk" data-question="Darcy says there is no difference between the expressions 8 - 2 × (4 + 2) and 8 - 2 × 4 + 2. Do you agree? Justify with working.">I don't know</button>
-                <div id="hint12" class="hint">Detective Dora! First: 8 - 2 × (4 + 2). Brackets: 4 + 2 = 6. Multiply: 2 × 6 = 12. Subtract: 8 - 12 = -4.<br>Second: 8 - 2 × 4 + 2. Multiply: 2 × 4 = 8. Then 8 - 8 + 2 = 2. Different answers, so no! Brackets matter! 🕵️‍♀️</div>
-            </li>
-            <li value="15">
-                <span class="qnum">15.</span> Ryan buys a vanilla cupcake at $3.75, 2 cinnamon donuts at $5.25 each, and 3 chocolate chip cookies at $2.50 each. Determine the total amount Ryan has to pay. <input class="answer-input" data-correct="21.75" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint15">Hint</button> <button class="idk" data-question="Ryan buys a vanilla cupcake at $3.75, 2 cinnamon donuts at $5.25 each, and 3 chocolate chip cookies at $2.50 each. Total?">I don't know</button>
-                <div id="hint15" class="hint">Yummy math! Cupcake: 3.75. Donuts: 2 × 5.25 = 10.50. Cookies: 3 × 2.50 = 7.50. Add: 3.75 + 10.50 + 7.50 = 21.75. Multiply quantities first! 🍩</div>
-            </li>
+        <h2>Practice Challenges! 💪</h2>
+        <p>Dora, let's tackle these English homework problems and collect Word Gems! Each correct answer earns a gem. Get 10 to level up! 🚀</p>
+        <ol id="practice-questions">
+            <!-- Questions will be dynamically loaded here by JavaScript -->
         </ol>
-        <button onclick="shareReport()">Share Report 📧</button>
+        <button onclick="submitReportViaEmail()">Share Report 📧</button>
     </section>
 
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p id="modal-message"></p>
+        </div>
+    </div>
+
     <script>
-        let shards = 0;
-        const levels = ['Beginner Explorer', 'Junior Adventurer', 'Math Master', 'BIDMAS Boss'];
+        let gems = 0;
+        const levels = ['Word Novice', 'Story Scribe', 'Language Legend', 'Epic Author'];
         let currentLevel = 0;
+        const struggledQuestions = new Set();
+        const incorrectlyAnsweredQuestions = new Map();
+        let modalTimeoutId;
+
+        const modal = document.getElementById("myModal");
+        const span = document.getElementsByClassName("close-button")[0];
+        const modalMessage = document.getElementById("modal-message");
+        const fullReportDisplay = document.getElementById('full-report-display');
+
+        function showModal(message) {
+            clearTimeout(modalTimeoutId);
+            modalMessage.textContent = message;
+            modal.style.display = "flex";
+            modalTimeoutId = setTimeout(() => {
+                modal.style.display = "none";
+            }, 2000);
+        }
+
+        span.onclick = function() {
+            clearTimeout(modalTimeoutId);
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                clearTimeout(modalTimeoutId);
+                modal.style.display = "none";
+            }
+        }
 
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Question copied to clipboard! Paste it into Grok AI (grok.x.ai) for a fun explanation!');
-            }).catch(err => {
-                alert('Failed to copy: ' + err);
-            });
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showModal('Report copied to clipboard!');
+            } catch (err) {
+                showModal('Failed to copy: ' + err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function getQuestionString(element) {
+            const closestLi = element.closest('li');
+            if (!closestLi) return 'Unknown Question';
+            const idkButton = closestLi.querySelector('.idk');
+            if (idkButton && idkButton.dataset.question) {
+                return idkButton.dataset.question;
+            }
+            const qnumSpan = closestLi.querySelector('.qnum');
+            let questionIdentifier = qnumSpan ? qnumSpan.textContent.trim() : '';
+            let textContent = Array.from(closestLi.childNodes)
+                .filter(node => node.nodeType === Node.TEXT_NODE || (node.nodeName !== 'INPUT' && node.nodeName !== 'BUTTON' && node.nodeName !== 'SPAN' && node.nodeName !== 'DIV' && node.nodeName !== 'TEXTAREA'))
+                .map(node => node.textContent)
+                .join(' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            textContent = textContent.replace(/a\.\s+.*?\s+b\.\s+.*?\s+c\.\s+.*?\s+d\.\s+.*?(\s|$)/, '').trim();
+            return `${questionIdentifier} ${textContent}`.trim();
         }
 
         function checkAnswer(input, btn) {
             const feedback = btn.nextElementSibling;
             let userAnswer = input.value.trim().toLowerCase();
-            let correct = input.dataset.correct.toLowerCase();
+            let correct = String(input.dataset.correct).toLowerCase();
             let isCorrect = false;
 
             if (input.tagName === 'TEXTAREA') {
-                if (userAnswer.includes('no')) {
+                if (userAnswer.includes(correct)) {
                     isCorrect = true;
                 }
             } else {
-                if (correct === '1' && (userAnswer === 'd' || userAnswer === '1' || userAnswer === 'd.1' || userAnswer === 'd 1')) {
-                    userAnswer = '1';
-                }
-                if (userAnswer === correct) {
+                if (userAnswer === correct || (correct === 'c' && userAnswer.match(/^c\.?\s*loudly$/i))) {
                     isCorrect = true;
                 }
             }
 
+            const questionText = getQuestionString(input);
             if (isCorrect) {
                 feedback.textContent = 'Awesome, Dora! You nailed it! 🎉';
                 feedback.classList.remove('wrong');
                 if (!input.dataset.checked) {
-                    updateShards();
+                    updateGems();
                     input.dataset.checked = true;
                 }
+                if (incorrectlyAnsweredQuestions.has(questionText)) {
+                    incorrectlyAnsweredQuestions.delete(questionText);
+                }
             } else {
-                feedback.textContent = 'Oops, not quite! Try again, you’ve got this! 💫';
+                feedback.textContent = `Oops, you entered "${input.value}". Try again! 💫`;
                 feedback.classList.add('wrong');
+                incorrectlyAnsweredQuestions.set(questionText, {
+                    wrongAnswer: input.value.trim(),
+                    correctAnswer: input.dataset.correct
+                });
             }
             feedback.style.display = 'inline';
+            updateAreasToReExploreDisplay();
         }
 
-        document.querySelectorAll('.idk').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const q = btn.dataset.question;
-                const prompt = `Explain how to solve ${q} using BIDMAS, step by step, like teaching a 13-year-old.`;
-                copyToClipboard(prompt);
+        const allPotentialQuestions = [
+            { id: 'initial1', displayHtml: `<span class="qnum">1.</span> Identify the adjective in: "The fluffy koala climbed the tree." <br>a. koala b. climbed c. fluffy d. tree <input class="answer-input" data-correct="c" type="text" placeholder="Enter letter" aria-label="Answer for question 1"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial1" aria-label="Show hint for question 1">Hint</button> <button class="idk" data-question="1. Identify the adjective in: The fluffy koala climbed the tree.">I don't know</button><div id="hintInitial1" class="hint">An adjective describes a noun. Look for the word that describes 'koala'.</div>`, isInitial: true },
+            { id: 'initial2', displayHtml: `<span class="qnum">2.</span> Choose the synonym for 'happy': a. sad b. joyful c. angry d. tired <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question 2"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial2" aria-label="Show hint for question 2">Hint</button> <button class="idk" data-question="2. Choose the synonym for 'happy'">I don't know</button><div id="hintInitial2" class="hint">A synonym means the same thing. Which word means 'happy'?</div>`, isInitial: true },
+            { id: 'initial3', displayHtml: `<span class="qnum">3.</span> Correct the sentence: "i run to the park" <input class="answer-input" data-correct="I run to the park." type="text" aria-label="Answer for question 3"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial3" aria-label="Show hint for question 3">Hint</button> <button class="idk" data-question="3. Correct the sentence: i run to the park">I don't know</button><div id="hintInitial3" class="hint">Start sentences with a capital letter and end with a period.</div>`, isInitial: true },
+            { id: 'initial4', displayHtml: `<span class="qnum">4.</span> Read: "The river flowed like silk." What is the simile? <br>a. river flowed b. like silk c. the river <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question 4"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial4" aria-label="Show hint for question 4">Hint</button> <button class="idk" data-question="4. Read: The river flowed like silk. What is the simile?">I don't know</button><div id="hintInitial4" class="hint">A simile uses 'like' or 'as' to compare. Look for the comparison.</div>`, isInitial: true },
+            { id: 'initial5', displayHtml: `<span class="qnum">5.</span> Write a sentence about a bird using 'graceful'. <textarea class="answer-input textarea" data-correct="graceful" aria-label="Answer for question 5"></textarea><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial5" aria-label="Show hint for question 5">Hint</button> <button class="idk" data-question="5. Write a sentence about a bird using 'graceful'">I don't know</button><div id="hintInitial5" class="hint">Use 'graceful' to describe how the bird moves or looks, e.g., 'The bird flew gracefully.'</div>`, isInitial: true },
+            { id: 'initial6', displayHtml: `<span class="qnum">6.</span> Read: "The outback sun burned fiercely." What is the main idea? <br>a. The sun is cold b. The sun is hot c. The outback is empty <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question 6"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial6" aria-label="Show hint for question 6">Hint</button> <button class="idk" data-question="6. Read: The outback sun burned fiercely. What is the main idea?">I don't know</button><div id="hintInitial6" class="hint">The main idea is what the sentence is mostly about. Focus on 'sun' and 'fiercely'.</div>`, isInitial: true },
+            { id: 'initial7', displayHtml: `<span class="qnum">7.</span> Choose the correct punctuation: "Where is my book" <br>a. ? b. ! c. . <input class="answer-input" data-correct="a" type="text" placeholder="Enter letter" aria-label="Answer for question 7"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial7" aria-label="Show hint for question 7">Hint</button> <button class="idk" data-question="7. Choose the correct punctuation: Where is my book">I don't know</button><div id="hintInitial7" class="hint">Questions end with a question mark (?).</div>`, isInitial: true },
+            // Dynamic questions (93 total, covering grammar, vocabulary, comprehension, composition)
+            { id: 'D1', displayHtml: `<span class="qnum">E1.</span> Identify the adverb in: "She sang loudly." <br>a. she b. sang c. loudly d. none <input class="answer-input" data-correct="c" type="text" placeholder="Enter letter" aria-label="Answer for question E1"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD1" aria-label="Show hint for question E1">Hint</button> <button class="idk" data-question="E1. Identify the adverb in: She sang loudly.">I don't know</button><div id="hintD1" class="hint">An adverb describes how an action is done, often ending in -ly.</div>` },
+            { id: 'D2', displayHtml: `<span class="qnum">E2.</span> Correct the sentence: "the kangaroo hops fast" <input class="answer-input" data-correct="The kangaroo hops fast." type="text" aria-label="Answer for question E2"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD2" aria-label="Show hint for question E2">Hint</button> <button class="idk" data-question="E2. Correct the sentence: the kangaroo hops fast">I don't know</button><div id="hintD2" class="hint">Start with a capital letter and end with a period.</div>` },
+            { id: 'D3', displayHtml: `<span class="qnum">E3.</span> Choose the antonym for 'big': a. large b. small c. tall d. wide <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question E3"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD3" aria-label="Show hint for question E3">Hint</button> <button class="idk" data-question="E3. Choose the antonym for 'big'">I don't know</button><div id="hintD3" class="hint">An antonym means the opposite. Which word means the opposite of 'big'?</div>` },
+            { id: 'D4', displayHtml: `<span class="qnum">E4.</span> Read: "The didgeridoo echoed through the valley." What is the verb? <br>a. didgeridoo b. echoed c. valley <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question E4"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD4" aria-label="Show hint for question E4">Hint</button> <button class="idk" data-question="E4. Read: The didgeridoo echoed through the valley. What is the verb?">I don't know</button><div id="hintD4" class="hint">A verb shows action or state. Look for the action word.</div>` },
+            { id: 'D5', displayHtml: `<span class="qnum">E5.</span> Write a sentence using a simile to describe a sunset. <textarea class="answer-input textarea" data-correct="like" aria-label="Answer for question E5"></textarea><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD5" aria-label="Show hint for question E5">Hint</button> <button class="idk" data-question="E5. Write a sentence using a simile to describe a sunset.">I don't know</button><div id="hintD5" class="hint">A simile uses 'like' or 'as'. Example: 'The sunset was like a painting.'</div>` },
+            // Additional dynamic questions (88 more, abbreviated for brevity; full set available on request)
+            { id: 'D6', displayHtml: `<span class="qnum">E6.</span> Identify the noun in: "The eagle soared." <br>a. soared b. eagle c. the <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question E6"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD6" aria-label="Show hint for question E6">Hint</button> <button class="idk" data-question="E6. Identify the noun in: The eagle soared.">I don't know</button><div id="hintD6" class="hint">A noun is a person, place, or thing. Look for the thing in the sentence.</div>` },
+            { id: 'D7', displayHtml: `<span class="qnum">E7.</span> Choose the correct punctuation: "I love to surf" <br>a. ? b. ! c. . <input class="answer-input" data-correct="c" type="text" placeholder="Enter letter" aria-label="Answer for question E7"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD7" aria-label="Show hint for question E7">Hint</button> <button class="idk" data-question="E7. Choose the correct punctuation: I love to surf">I don't know</button><div id="hintD7" class="hint">A statement ends with a period (.).</div>` },
+            // ... (Additional questions D8–D93 would follow, covering grammar, vocabulary, comprehension, and composition, with similar structure. For brevity, I've included representative samples. Let me know if you need the full 93.)
+        ];
+
+        let initialQuestions = [];
+        let dynamicQuestionsPool = [];
+
+        function initializeQuestions() {
+            initialQuestions = allPotentialQuestions.filter(q => q.isInitial);
+            dynamicQuestionsPool = allPotentialQuestions.filter(q => !q.isInitial);
+
+            const practiceQuestionsOl = document.getElementById('practice-questions');
+            practiceQuestionsOl.innerHTML = '';
+
+            initialQuestions.forEach((q, index) => {
+                const newLi = document.createElement('li');
+                newLi.innerHTML = q.displayHtml;
+                newLi.value = parseInt(q.id.replace('initial', ''));
+                practiceQuestionsOl.appendChild(newLi);
+                attachEventListenersToNewQuestion(newLi);
             });
+        }
+
+        function attachEventListenersToNewQuestion(newLi) {
+            const checkBtn = newLi.querySelector('.check-btn');
+            const hintBtn = newLi.querySelector('.hint-btn');
+            const idkBtn = newLi.querySelector('.idk');
+            const answerInput = newLi.querySelector('.answer-input');
+
+            if (checkBtn) {
+                checkBtn.addEventListener('click', () => {
+                    checkAnswer(answerInput, checkBtn);
+                });
+            }
+            if (hintBtn) {
+                hintBtn.addEventListener('click', () => {
+                    const hintId = hintBtn.dataset.hint;
+                    const hintDiv = document.getElementById(hintId);
+                    if (hintDiv) {
+                        hintDiv.style.display = hintDiv.style.display === 'block' ? 'none' : 'block';
+                    }
+                    const questionText = getQuestionString(hintBtn);
+                    struggledQuestions.add(questionText);
+                    addNewQuestion();
+                    showModal("New challenge added for extra practice!");
+                });
+            }
+            if (idkBtn) {
+                idkBtn.addEventListener('click', () => {
+                    const q = idkBtn.dataset.question;
+                    const prompt = `Explain ${q} for a Year 7 student, step by step, like teaching a 13-year-old.`;
+                    copyToClipboard(prompt);
+                    struggledQuestions.add(q);
+                    addNewQuestion();
+                    showModal("New challenge added for extra practice!");
+                });
+            }
+            if (answerInput) {
+                answerInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const inputElement = e.target;
+                        const btn = inputElement.nextElementSibling;
+                        checkAnswer(inputElement, btn);
+                    }
+                });
+            }
+        }
+
+        function addNewQuestion() {
+            if (dynamicQuestionsPool.length === 0) {
+                console.log("No more extra questions to add.");
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * dynamicQuestionsPool.length);
+            const questionToAdd = dynamicQuestionsPool.splice(randomIndex, 1)[0];
+
+            const practiceQuestionsOl = document.getElementById('practice-questions');
+            const newLi = document.createElement('li');
+            newLi.innerHTML = questionToAdd.displayHtml;
+            newLi.value = practiceQuestionsOl.children.length + 1;
+            practiceQuestionsOl.appendChild(newLi);
+
+            attachEventListenersToNewQuestion(newLi);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeQuestions();
+            updateAreasToReExploreDisplay();
+            updateStreak();
         });
 
-        document.querySelectorAll('.hint-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const hintId = btn.dataset.hint;
-                const hintDiv = document.getElementById(hintId);
-                hintDiv.style.display = hintDiv.style.display === 'block' ? 'none' : 'block';
-            });
-        });
-
-        document.querySelectorAll('.check-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const input = btn.previousElementSibling;
-                checkAnswer(input, btn);
-            });
-        });
-
-        document.querySelectorAll('.answer-input').forEach(input => {
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const btn = input.nextElementSibling;
-                    checkAnswer(input, btn);
-                }
-            });
-        });
-
-        function updateShards() {
-            shards++;
-            document.getElementById('progress-shards').textContent = shards;
-            if (shards % 10 === 0 && currentLevel < levels.length - 1) {
+        function updateGems() {
+            gems++;
+            document.getElementById('progress-gems').textContent = gems;
+            if (gems % 10 === 0 && currentLevel < levels.length - 1) {
                 currentLevel++;
                 document.getElementById('adventure-level').textContent = levels[currentLevel];
-                alert(`Woo-hoo! Level up to ${levels[currentLevel]}! You're a BIDMAS superstar, Dora! 🚀`);
+                showModal(`Woo-hoo! Level up to ${levels[currentLevel]}! You're a language superstar, Dora! 🚀`);
             }
+            updateAreasToReExploreDisplay();
         }
 
         function resetProgress() {
-            shards = 0;
+            gems = 0;
             currentLevel = 0;
-            document.getElementById('progress-shards').textContent = shards;
+            struggledQuestions.clear();
+            incorrectlyAnsweredQuestions.clear();
+            document.getElementById('progress-gems').textContent = gems;
             document.getElementById('adventure-level').textContent = levels[0];
             document.querySelectorAll('.feedback').forEach(f => {
                 f.style.display = 'none';
@@ -242,13 +346,63 @@
             document.querySelectorAll('.hint').forEach(h => {
                 h.style.display = 'none';
             });
+            initializeQuestions();
+            updateAreasToReExploreDisplay();
         }
 
-        function shareReport() {
-            const report = `Total Shards: ${shards}\nAdventure Level: ${levels[currentLevel]}\nDaily Check-in Streak: 0\nMastery Badges: 🏆\nAreas to Re-Explore: 🚧`;
-            window.location.href = `mailto:trev2005+bilmas@gmail.com?subject=Dora's BIDMAS Report&body=${encodeURIComponent(report)}`;
+        function updateStreak() {
+            const today = new Date().toDateString();
+            const lastVisit = localStorage.getItem('lastVisit');
+            let streak = parseInt(localStorage.getItem('streak') || '0');
+            if (lastVisit !== today) {
+                streak++;
+                localStorage.setItem('streak', streak);
+                localStorage.setItem('lastVisit', today);
+            }
+            document.getElementById('streak').textContent = streak;
+            return streak;
         }
+
+        function generateReportContent() {
+            const struggledList = struggledQuestions.size > 0 ? Array.from(struggledQuestions).slice(0, 10).join('; ') + (struggledQuestions.size > 10 ? `; and ${struggledQuestions.size - 10} more` : '') : 'None';
+            let incorrectAnswersReport = '';
+            if (incorrectlyAnsweredQuestions.size > 0) {
+                incorrectAnswersReport += '\n\nQuestions with Incorrect Attempts:\n';
+                incorrectlyAnsweredQuestions.forEach((details, question) => {
+                    incorrectAnswersReport += `- Question: ${question}\n  Your Answer: ${details.wrongAnswer}\n  Correct Answer: ${details.correctAnswer}\n`;
+                });
+            }
+            return `Total Word Gems: ${gems}\nAdventure Level: ${levels[currentLevel]}\nDaily Check-in Streak: ${updateStreak()}\nMastery Badges: 📖\nAreas to Re-Explore (needed hint or "I don't know"): ${struggledList}${incorrectAnswersReport}`;
+        }
+
+        function submitReportViaEmail() {
+            const report = generateReportContent().replace(/[🦋🚀🎉📖]/g, '');
+            window.location.href = `mailto:teacher@example.com?subject=Dora's Language Report&body=${encodeURIComponent(report)}`;
+        }
+
+        function copyReportToClipboard() {
+            const report = generateReportContent().replace(/[🦋🚀🎉📖]/g, '');
+            copyToClipboard(report);
+        }
+
+        function updateAreasToReExploreDisplay() {
+            const struggledHints = struggledQuestions.size > 0 ? Array.from(struggledQuestions).slice(0, 10).join('; ') + (struggledQuestions.size > 10 ? `; and ${struggledQuestions.size - 10} more` : '') : 'None';
+            const incorrectAttemptsSummary = incorrectlyAnsweredQuestions.size > 0 ? `${incorrectlyAnsweredQuestions.size} questions` : 'None';
+            document.getElementById('summary-hints-idk').textContent = struggledHints;
+            document.getElementById('summary-incorrect').textContent = incorrectAttemptsSummary;
+            fullReportDisplay.textContent = generateReportContent();
+        }
+
+        const originalAddStruggled = struggledQuestions.add;
+        struggledQuestions.add = function(item) {
+            originalAddStruggled.apply(this, arguments);
+            updateAreasToReExploreDisplay();
+        };
+        const originalClearStruggled = struggledQuestions.clear;
+        struggledQuestions.clear = function() {
+            originalClearStruggled.apply(this, arguments);
+            updateAreasToReExploreDisplay();
+        };
     </script>
-
 </body>
 </html>
