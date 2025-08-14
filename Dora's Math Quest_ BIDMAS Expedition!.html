@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dora's Math Quest: BIDMAS Expedition!</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f0f8ff; color: #333; }
+        header { text-align: center; }
+        section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; background-color: white; border-radius: 10px; }
+        .qnum { cursor: help; font-weight: bold; }
+        .idk { margin-left: 10px; cursor: pointer; background-color: #ffd700; border: none; padding: 6px 10px; border-radius: 5px; }
+        .hint-btn { margin-left: 10px; cursor: pointer; background-color: #90ee90; border: none; padding: 6px 10px; border-radius: 5px; }
+        .answer-input { margin-left: 10px; width: 100px; padding: 5px; border-radius: 5px; }
+        .check-btn { margin-left: 10px; cursor: pointer; background-color: #add8e6; border: none; padding: 6px 10px; border-radius: 5px; }
+        .feedback { margin-left: 10px; color: green; display: none; font-weight: bold; }
+        .wrong { color: red; }
+        #progress-shards { font-weight: bold; }
+        .hint { display: none; background-color: #fffacd; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .fun-msg { color: #ff4500; font-weight: bold; }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 80%; /* Could be more responsive */
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #full-report-display {
+            background-color: #e0f2f7;
+            border: 1px solid #a7d9ed;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap; /* Ensures line breaks and spaces are preserved */
+            font-family: monospace;
+            font-size: 0.9em;
+            text-align: left;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .gemini-storybook-link {
+            display: inline-block;
+            margin-top: 10px;
+            border-radius: 15px; /* Rounded corners for the image container */
+            overflow: hidden; /* Ensures image respects border-radius */
+        }
+        .gemini-storybook-link img {
+            width: 150px; /* Adjust size as needed */
+            height: auto;
+            border-radius: 15px; /* Rounded corners for the image */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Subtle shadow */
+            transition: transform 0.2s ease-in-out; /* Smooth hover effect */
+        }
+        .gemini-storybook-link img:hover {
+            transform: scale(1.05); /* Slightly enlarge on hover */
+        }
+    </style>
+    <!-- MathJax for rendering LaTeX equations -->
+    <script type="text/javascript" id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+
+    <!-- Firebase SDK Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // IMPORTANT: These global variables are provided by the Canvas environment.
+        // DO NOT remove or modify these declarations.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let userId = null; // Store the current user's ID
+
+        // Authenticate user on load
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is signed in.
+                userId = user.uid;
+                console.log("Firebase Authenticated! User ID:", userId);
+                // Now that we have a userId, we can load user progress
+                loadUserProgress();
+            } else {
+                // User is signed out or not yet authenticated.
+                console.log("No user signed in. Attempting anonymous or custom sign-in...");
+                try {
+                    if (initialAuthToken) {
+                        // Use custom token provided by Canvas for seamless login
+                        const userCredential = await signInWithCustomToken(auth, initialAuthToken);
+                        userId = userCredential.user.uid;
+                        console.log("Signed in with custom token. User ID:", userId);
+                    } else {
+                        // Fallback to anonymous sign-in if no custom token is available
+                        const userCredential = await signInAnonymously(auth);
+                        userId = userCredential.user.uid;
+                        console.log("Signed in anonymously. User ID:", userId);
+                    }
+                    // After successful sign-in, load user progress
+                    loadUserProgress();
+                } catch (error) {
+                    console.error("Firebase authentication failed:", error);
+                }
+            }
+        });
+
+        // --- Firebase Data Functions ---
+
+        // Function to load user progress from Firestore
+        async function loadUserProgress() {
+            if (!userId) {
+                console.error("No user ID available to load progress.");
+                return;
+            }
+
+            // Path for private user data: /artifacts/{appId}/users/{userId}/progress/current
+            const userProgressRef = doc(db, `artifacts/${appId}/users/${userId}/progress/current`);
+
+            onSnapshot(userProgressRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    shards = data.shards || 0;
+                    currentLevel = data.currentLevel || 0;
+                    // Rehydrate sets and maps from stored arrays/objects
+                    struggledQuestions = new Set(data.struggledQuestions || []);
+                    incorrectlyAnsweredQuestions = new Map(Object.entries(data.incorrectlyAnsweredQuestions || {}));
+                    console.log("User progress loaded:", data);
+                } else {
+                    console.log("No user progress found, starting fresh.");
+                    // Initialize if no progress exists
+                    shards = 0;
+                    currentLevel = 0;
+                    struggledQuestions = new Set();
+                    incorrectlyAnsweredQuestions = new Map();
+                    // Save initial state immediately to Firestore
+                    saveUserProgress();
+                }
+                // Update UI after loading/initializing
+                document.getElementById('progress-shards').textContent = shards;
+                document.getElementById('adventure-level').textContent = levels[currentLevel];
+                updateAreasToReExploreDisplay();
+            }, (error) => {
+                console.error("Error listening to user progress:", error);
+            });
+        }
+
+        // Function to save user progress to Firestore
+        async function saveUserProgress() {
+            if (!userId) {
+                console.error("No user ID available to save progress.");
+                return;
+            }
+
+            // Convert Map to plain object for Firestore storage
+            const incorrectlyAnsweredObj = {};
+            incorrectlyAnsweredQuestions.forEach((value, key) => {
+                incorrectlyAnsweredObj[key] = value;
+            });
+
+            const progressData = {
+                shards: shards,
+                currentLevel: currentLevel,
+                struggledQuestions: Array.from(struggledQuestions), // Convert Set to Array
+                incorrectlyAnsweredQuestions: incorrectlyAnsweredObj // Convert Map to Object
+            };
+
+            // Path for private user data: /artifacts/{appId}/users/{userId}/progress/current
+            const userProgressRef = doc(db, `artifacts/${appId}/users/${userId}/progress/current`);
+
+            try {
+                await setDoc(userProgressRef, progressData, { merge: true }); // Use merge: true to avoid overwriting other fields if they exist
+                console.log("User progress saved successfully!");
+            } catch (error) {
+                console.error("Error saving user progress:", error);
+            }
+        }
+
+        // --- END Firebase Data Functions ---
+
+
+        let shards = 0;
+        const levels = ['Beginner Explorer', 'Junior Adventurer', 'Math Master', 'BIDMAS Boss'];
+        let currentLevel = 0;
+        let struggledQuestions = new Set(); // To track questions where hints were asked or 'I don't know' clicked
+        let incorrectlyAnsweredQuestions = new Map(); // New: To track questions answered incorrectly
+        let modalTimeoutId; // To store the timeout ID for the modal
+
+        // Get the modal
+        const modal = document.getElementById("myModal");
+        // Get the <span> element that closes the modal
+        const span = document.getElementsByClassName("close-button")[0];
+        const modalMessage = document.getElementById("modal-message");
+        const fullReportDisplay = document.getElementById('full-report-display');
+
+
+        // Function to display the modal
+        function showModal(message) {
+            clearTimeout(modalTimeoutId); // Clear any existing timeout
+            modalMessage.textContent = message;
+            modal.style.display = "flex"; // Use flex to center the content
+            // Set timeout to close modal after 2 seconds
+            modalTimeoutId = setTimeout(() => {
+                modal.style.display = "none";
+            }, 2000); // Changed from 5000 to 2000 milliseconds
+        }
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            clearTimeout(modalTimeoutId); // Clear timeout if manually closed
+            modal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                clearTimeout(modalTimeoutId); // Clear timeout if manually closed
+                modal.style.display = "none";
+            }
+        }
+
+        function copyToClipboard(text) {
+            // Using a temporary textarea to copy to clipboard for broader compatibility
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showModal('Text copied to clipboard!'); // Changed message for general use
+            } catch (err) {
+                showModal('Failed to copy: ' + err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // Function to safely get the question string from the associated 'idk' button or by parsing
+        function getQuestionString(element) {
+            const closestLi = element.closest('li');
+            if (!closestLi) {
+                return 'Unknown Question';
+            }
+
+            // Prioritize data-question from an associated '.idk' button if available and relevant
+            const idkButton = closestLi.querySelector('.idk');
+            if (idkButton && idkButton.dataset.question) {
+                return idkButton.dataset.question;
+            }
+            
+            // For sub-questions within a larger list item, construct a more specific identifier
+            // For example, for Q1.a., find the main Q1 and then the 'a' label
+            let questionIdentifier = '';
+            const mainLi = closestLi.closest('ol > li'); // Find the top-level <li> if it's a nested question
+            if (mainLi) {
+                const mainQnumSpan = mainLi.querySelector('.qnum');
+                if (mainQnumSpan) {
+                    questionIdentifier += mainQnumSpan.textContent.trim();
+                }
+                const subQuestionLabel = closestLi.textContent.match(/^[a-z]\./);
+                if (subQuestionLabel) {
+                    questionIdentifier += ` ${subQuestionLabel[0]}`;
+                }
+            } else { // It's a direct <li> child of <ol>
+                const qnumSpan = closestLi.querySelector('.qnum');
+                if (qnumSpan) {
+                    questionIdentifier = qnumSpan.textContent.trim();
+                }
+            }
+
+            let textContent = '';
+            // Get text content excluding child elements like inputs, buttons, hints
+            Array.from(closestLi.childNodes).forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    textContent += node.textContent;
+                }
+            });
+            // Clean up text content and combine with identifier
+            textContent = textContent.replace(/\s+/g, ' ').trim();
+            if (textContent.includes('$')) { // Remove MathJax delimiters for plain text report
+                textContent = textContent.replace(/\$/g, '');
+            }
+            // Remove text that indicates choices for multiple choice questions
+            textContent = textContent.replace(/a\. \d+ b\. \d+ c\. \d+ d\. \d+/, '').trim();
+
+
+            return `${questionIdentifier} ${textContent}`.trim();
+        }
+
+        function checkAnswer(input, btn) {
+            const feedback = btn.nextElementSibling;
+            let userAnswer = input.value.trim().toLowerCase();
+            let correct = String(input.dataset.correct).toLowerCase();
+
+            let isCorrect = false;
+
+            if (input.tagName === 'TEXTAREA') {
+                if (userAnswer.includes('no')) {
+                    isCorrect = true;
+                }
+            } else {
+                // Special handling for the type of question where 'a' or '16' are correct (example for Q4)
+                if (correct === '16' && (userAnswer === 'a' || userAnswer === '16' || userAnswer === 'a.16' || userAnswer === 'a 16')) {
+                    userAnswer = '16'; // Normalize for comparison
+                }
+                if (userAnswer === correct) {
+                    isCorrect = true;
+                }
+            }
+
+            const questionText = getQuestionString(input); // Get the question text for tracking
+
+            if (isCorrect) {
+                feedback.textContent = 'Awesome, Dora! You nailed it! 🎉';
+                feedback.classList.remove('wrong');
+                if (!input.dataset.checked) {
+                    updateShards();
+                    input.dataset.checked = true;
+                }
+                // If a question was previously answered incorrectly and now corrected, remove it from the incorrect list
+                if (incorrectlyAnsweredQuestions.has(questionText)) {
+                    incorrectlyAnsweredQuestions.delete(questionText);
+                }
+            } else {
+                feedback.textContent = 'Oops, not quite! Try again, you’ve got this! 💫';
+                feedback.classList.add('wrong');
+                // Store incorrect answer details
+                incorrectlyAnsweredQuestions.set(questionText, {
+                    wrongAnswer: input.value.trim(), // Keep original user input for report
+                    correctAnswer: input.dataset.correct // Keep original correct answer for report
+                });
+                input.value = ''; // Clear the input field on wrong answer
+            }
+            feedback.style.display = 'inline';
+            updateAreasToReExploreDisplay(); // Update display for incorrect answers
+            saveUserProgress(); // Save progress after every check
+        }
+
+        // Consolidated list of all potential equations (100 in total)
+        const allPotentialEquations = [
+            // Easiest 7 questions for initial display
+            { id: 'initial1', displayHtml: `<span class="qnum">1.</span> Calculate: $ (7 + 3) \\times 2 - 5 $ <input class="answer-input" data-correct="15" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial1">Hint</button> <button class="idk" data-question="1. Calculate: (7 + 3) × 2 - 5">I don't know</button><div id="hintInitial1" class="hint">Brackets first: $7 + 3 = 10$. Then multiply: $10 \\times 2 = 20$. Finally, subtract: $20 - 5 = 15$.</div>`, isInitial: true },
+            { id: 'initial2', displayHtml: `<span class="qnum">2.</span> Calculate: $ 18 \\div (6 - 3) + 4 $ <input class="answer-input" data-correct="10" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial2">Hint</button> <button class="idk" data-question="2. Calculate: 18 ÷ (6 - 3) + 4">I don't know</button><div id="hintInitial2" class="hint">Brackets first: $6 - 3 = 3$. Then divide: $18 \\div 3 = 6$. Finally, add: $6 + 4 = 10$.</div>`, isInitial: true },
+            { id: 'initial3', displayHtml: `<span class="qnum">3.</span> Calculate: $ 10 \\times 3 - 8 \\div 2 $ <input class="answer-input" data-correct="26" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial3">Hint</button> <button class="idk" data-question="3. Calculate: 10 × 3 - 8 ÷ 2">I don't know</button><div id="hintInitial3" class="hint">Multiply/Divide first: $10 \\times 3 = 30$, $8 \\div 2 = 4$. Then subtract: $30 - 4 = 26$.</div>`, isInitial: true },
+            { id: 'initial4', displayHtml: `<span class="qnum">4.</span> Calculate: $ 12 + 6 \\div 3 \\times 2 $ <input class="answer-input" data-correct="16" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial4">Hint</button> <button class="idk" data-question="4. Calculate: 12 + 6 ÷ 3 × 2">I don't know</button><div id="hintInitial4" class="hint">Divide/Multiply left to right: $6 \\div 3 = 2$, then $2 \\times 2 = 4$. Then add: $12 + 4 = 16$.</div>`, isInitial: true },
+            { id: 'initial5', displayHtml: `<span class="qnum">5.</span> Calculate: $ (5 + 7) \\div (8 - 2) $ <input class="answer-input" data-correct="2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial5">Hint</button> <button class="idk" data-question="5. Calculate: (5 + 7) ÷ (8 - 2)">I don't know</button><div id="hintInitial5" class="hint">Solve brackets first: $5 + 7 = 12$, $8 - 2 = 6$. Then divide: $12 \\div 6 = 2$.</div>`, isInitial: true },
+            { id: 'initial6', displayHtml: `<span class="qnum">6.</span> Calculate: $ 25 \\div 5 \\times (2 + 3) $ <input class="answer-input" data-correct="25" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial6">Hint</button> <button class="idk" data-question="6. Calculate: 25 ÷ 5 × (2 + 3)">I don't know</button><div id="hintInitial6" class="hint">Brackets first: $2 + 3 = 5$. Then left to right multiply/divide: $25 \\div 5 = 5$, then $5 \\times 5 = 25$.</div>`, isInitial: true },
+            { id: 'initial7', displayHtml: `<span class="qnum">7.</span> Calculate: $ (1 + 2) \\times (3 + 4) $ <input class="answer-input" data-correct="21" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial7">Hint</button> <button class="idk" data-question="7. Calculate: (1 + 2) × (3 + 4)">I don't know</button><div id="hintInitial7" class="hint">Brackets first: $1 + 2 = 3$, $3 + 4 = 7$. Then multiply: $3 \\times 7 = 21$.</div>`, isInitial: true },
+
+            // Dynamic questions - Updated data-question for grouped questions (Q1, Q2, Q3) to include full context
+            { id: 'D93a', displayHtml: `<li><span class="qnum">Q1.a.</span> $5 + 2 \\times 6$ <input class="answer-input" data-correct="17" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1a">Hint</button> <button class="idk" data-question="Q1.a. 5 + 2 × 6">I don't know</button><div id="hint1a" class="hint">Remember BIDMAS! Multiplication before addition. $2 \\times 6 = 12$, then $5 + 12 = 17$.</div></li>` },
+            { id: 'D93b', displayHtml: `<li><span class="qnum">Q1.b.</span> $20 - 15 \\div 3$ <input class="answer-input" data-correct="15" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1b">Hint</button> <button class="idk" data-question="Q1.b. 20 - 15 ÷ 3">I don't know</button><div id="hint1b" class="hint">Division before subtraction. $15 \\div 3 = 5$, then $20 - 5 = 15$.</div></li>` },
+            { id: 'D93c', displayHtml: `<li><span class="qnum">Q1.c.</span> $7 + (-12)$ <input class="answer-input" data-correct="-5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1c">Hint</button> <button class="idk" data-question="Q1.c. 7 + (-12)">I don't know</button><div id="hint1c" class="hint">Adding a negative is like subtracting: $7 - 12 = -5$.</div></li>` },
+            { id: 'D93d', displayHtml: `<li><span class="qnum">Q1.d.</span> $10 - 4 + (-7)$ <input class="answer-input" data-correct="-1" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint1d">Hint</button> <button class="idk" data-question="Q1.d. 10 - 4 + (-7)">I don't know</button><div id="hint1d" class="hint">Work from left to right: $10 - 4 = 6$, then $6 + (-7) = 6 - 7 = -1$.</div></li>` },
+
+            { id: 'D94a', displayHtml: `<li><span class="qnum">Q2.a.</span> $8 \\times (-7)$ <input class="answer-input" data-correct="-56" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2a">Hint</button> <button class="idk" data-question="Q2.a. 8 × (-7)">I don't know</button><div id="hint2a" class="hint">A positive multiplied by a negative equals a negative. $8 \\times 7 = 56$, so $8 \\times (-7) = -56$.</div></li>` },
+            { id: 'D94b', displayHtml: `<li><span class="qnum">Q2.b.</span> $48 \\div 6 - 9$ <input class="answer-input" data-correct="-1" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2b">Hint</button> <button class="idk" data-question="Q2.b. 48 ÷ 6 - 9">I don't know</button><div id="hint2b" class="hint">Division first: $48 \\div 6 = 8$. Then subtract: $8 - 9 = -1$.</div></li>` },
+            { id: 'D94c', displayHtml: `<li><span class="qnum">Q2.c.</span> $15 + (-3) - 8$ <input class="answer-input" data-correct="4" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2c">Hint</button> <button class="idk" data-question="Q2.c. 15 + (-3) - 8">I don't know</button><div id="hint2c" class="hint">Left to right: $15 + (-3) = 12$, then $12 - 8 = 4$.</div></li>` },
+            { id: 'D94d', displayHtml: `<li><span class="qnum">Q2.d.</span> $(9 + 5) \\div 7$ <input class="answer-input" data-correct="2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint2d">Hint</button> <button class="idk" data-question="Q2.d. (9 + 5) ÷ 7">I don't know</button><div id="hint2d" class="hint">Brackets first: $9 + 5 = 14$. Then divide: $14 \\div 7 = 2$.</div></li>` },
+
+            { id: 'D95a', displayHtml: `<li><span class="qnum">Q3.a.</span> $-5 + 3 \\times (-2)$ <input class="answer-input" data-correct="-11" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint3a">Hint</button> <button class="idk" data-question="Q3.a. -5 + 3 × (-2)">I don't know</button><div id="hint3a" class="hint">Multiply first: $3 \\times (-2) = -6$. Then add: $-5 + (-6) = -11$.</div></li>` },
+            { id: 'D95b', displayHtml: `<li><span class="qnum">Q3.b.</span> $(10 - 2 \\times 3) + 5$ <input class="answer-input" data-correct="9" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint3b">Hint</button> <button class="idk" data-question="Q3.b. (10 - 2 × 3) + 5">I don't know</button><div id="hint3b" class="hint">Inside brackets, multiply first: $2 \\times 3 = 6$. Then $10 - 6 = 4$. Finally, $4 + 5 = 9$.</div></li>` },
+
+            // Single-part dynamic questions (renumbered from E1 onwards to just D1, D2 etc. for consistency with original. The Qnum shown on screen will be E1, E2 etc.)
+            { id: 'D1', displayHtml: `<span class="qnum">E1.</span> Calculate: $ 4^2 + 5 \\times 2 $ <input class="answer-input" data-correct="26" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD1">Hint</button> <button class="idk" data-question="E1. Calculate: 4^2 + 5 × 2">I don't know</button><div id="hintD1" class="hint">Indices first: $4^2 = 16$. Then multiply: $5 \\times 2 = 10$. Finally, add: $16 + 10 = 26$.</div>` },
+            { id: 'D2', displayHtml: `<span class="qnum">E2.</span> Calculate: $ (9 - 4)^2 - 10 $ <input class="answer-input" data-correct="15" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD2">Hint</button> <button class="idk" data-question="E2. Calculate: (9 - 4)^2 - 10">I don't know</button><div id="hintD2" class="hint">Brackets first: $9 - 4 = 5$. Then indices: $5^2 = 25$. Finally, subtract: $25 - 10 = 15$.</div>` },
+            { id: 'D3', displayHtml: `<span class="qnum">E3.</span> Calculate: $ 2^3 - 4 + 1 $ <input class="answer-input" data-correct="5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD3">Hint</button> <button class="idk" data-question="E3. Calculate: 2^3 - 4 + 1">I don't know</button><div id="hintD3" class="hint">Indices first: $2^3 = 8$. Then left to right: $8 - 4 = 4$, then $4 + 1 = 5$.</div>` },
+            { id: 'D4', displayHtml: `<span class="qnum">E4.</span> Calculate: $ 15 - (3 \\times 4) + 6 $ <input class="answer-input" data-correct="9" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD4">Hint</button> <button class="idk" data-question="E4. Calculate: 15 - (3 × 4) + 6">I don't know</button><div id="hintD4" class="hint">Brackets first: $3 \\times 4 = 12$. Then left to right: $15 - 12 = 3$, then $3 + 6 = 9$.</div>` },
+            { id: 'D5', displayHtml: `<span class="qnum">E5.</span> Calculate: $ -6 + 10 \\div 2 $ <input class="answer-input" data-correct="-1" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD5">Hint</button> <button class="idk" data-question="E5. Calculate: -6 + 10 ÷ 2">I don't know</button><div id="hintD5" class="hint">Divide first: $10 \\div 2 = 5$. Then add: $-6 + 5 = -1$.</div>` },
+            { id: 'D6', displayHtml: `<span class="qnum">E6.</span> Calculate: $ 3 \\times (4 - 7) + 2^2 $ <input class="answer-input" data-correct="-5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD6">Hint</button> <button class="idk" data-question="E6. Calculate: 3 × (4 - 7) + 2^2">I don't know</button><div id="hintD6" class="hint">Brackets: $4 - 7 = -3$. Indices: $2^2 = 4$. Multiply: $3 \\times (-3) = -9$. Add: $-9 + 4 = -5$.</div>` },
+            { id: 'D7', displayHtml: `<span class="qnum">E7.</span> Calculate: $ 50 \\div 10 - (-3) $ <input class="answer-input" data-correct="8" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD7">Hint</button> <button class="idk" data-question="E7. Calculate: 50 ÷ 10 - (-3)">I don't know</button><div id="hintD7" class="hint">Divide first: $50 \\div 10 = 5$. Subtracting a negative is adding: $5 - (-3) = 5 + 3 = 8$.</div>` },
+            { id: 'D8', displayHtml: `<span class="qnum">E8.</span> Calculate: $ 7^2 - 10 \\times 4 $ <input class="answer-input" data-correct="9" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD8">Hint</button> <button class="idk" data-question="E8. Calculate: 7^2 - 10 × 4">I don't know</button><div id="hintD8" class="hint">Indices: $7^2 = 49$. Multiply: $10 \\times 4 = 40$. Subtract: $49 - 40 = 9$.</div>` },
+            { id: 'D9', displayHtml: `<span class="qnum">E9.</span> Calculate: $ 100 \\div 5^2 - 3 $ <input class="answer-input" data-correct="1" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD9">Hint</button> <button class="idk" data-question="E9. Calculate: 100 ÷ 5^2 - 3">I don't know</button><div id="hintD9" class="hint">Indices first: $5^2 = 25$. Then divide: $100 \\div 25 = 4$. Finally, subtract: $4 - 3 = 1$.</div>` },
+            { id: 'D10', displayHtml: `<span class="qnum">E10.</span> Calculate: $ 1.5 + 2.5 \\times 2 $ <input class="answer-input" data-correct="6.5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD10">Hint</button> <button class="idk" data-question="E10. Calculate: 1.5 + 2.5 × 2">I don't know</button><div id="hintD10" class="hint">Multiply first: $2.5 \\times 2 = 5$. Then add: $1.5 + 5 = 6.5$.</div>` },
+            { id: 'D11', displayHtml: `<span class="qnum">E11.</span> Calculate: $ 14 - 6 \\div 2 + 5 $ <input class="answer-input" data-correct="16" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD11">Hint</button> <button class="idk" data-question="E11. Calculate: 14 - 6 ÷ 2 + 5">I don't know</button><div id="hintD11" class="hint">Divide first: $6 \\div 2 = 3$. Then left to right: $14 - 3 = 11$, then $11 + 5 = 16$.</div>` },
+            { id: 'D12', displayHtml: `<span class="qnum">E12.</span> Calculate: $ (4 - 8) \\div 2 $ <input class="answer-input" data-correct="-2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD12">Hint</button> <button class="idk" data-question="E12. Calculate: (4 - 8) ÷ 2">I don't know</button><div id="hintD12" class="hint">Brackets first: $4 - 8 = -4$. Then divide: $-4 \\div 2 = -2$.</div>` },
+            { id: 'D13', displayHtml: `<span class="qnum">E13.</span> Calculate: $ -9 \\times (-2) - 5 $ <input class="answer-input" data-correct="13" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD13">Hint</button> <button class="idk" data-question="E13. Calculate: -9 × (-2) - 5">I don't know</button><div id="hintD13" class="hint">Multiply first: $-9 \\times (-2) = 18$. Then subtract: $18 - 5 = 13$.</div>` },
+            { id: 'D14', displayHtml: `<span class="qnum">E14.</span> Calculate: $ (10 + 2^2) \\div 7 $ <input class="answer-input" data-correct="2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD14">Hint</button> <button class="idk" data-question="E14. Calculate: (10 + 2^2) ÷ 7">I don't know</button><div id="hintD14" class="hint">Inside brackets: Indices $2^2 = 4$. Then $10 + 4 = 14$. Then divide: $14 \\div 7 = 2$.</div>` },
+            { id: 'D15', displayHtml: `<span class="qnum">E15.</span> Calculate: $ 1.5 + 3.5 - 2.1 $ <input class="answer-input" data-correct="2.9" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD15">Hint</button> <button class="idk" data-question="E15. Calculate: 1.5 + 3.5 - 2.1">I don't know</button><div id="hintD15" class="hint">Left to right: $1.5 + 3.5 = 5$. Then $5 - 2.1 = 2.9$.</div>` },
+            { id: 'D16', displayHtml: `<span class="qnum">E16.</span> Calculate: $ 9 - 3 \\times (-4) $ <input class="answer-input" data-correct="21" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD16">Hint</button> <button class="idk" data-question="E16. Calculate: 9 - 3 × (-4)">I don't know</button><div id="hintD16" class="hint">Multiply first: $3 \\times (-4) = -12$. Then subtract: $9 - (-12) = 9 + 12 = 21$.</div>` },
+            { id: 'D17', displayHtml: `<span class="qnum">E17.</span> Calculate: $ 1/2 + 3/4 \\times 1/3 $ <input class="answer-input" data-correct="0.75" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD17">Hint</button> <button class="idk" data-question="E17. Calculate: 1/2 + 3/4 × 1/3">I don't know</button><div id="hintD17" class="hint">Multiply first: $3/4 \\times 1/3 = 3/12 = 1/4$. Then add: $1/2 + 1/4 = 2/4 + 1/4 = 3/4 = 0.75$.</div>` },
+            { id: 'D18', displayHtml: `<span class="qnum">E18.</span> Calculate: $ 5 \\times 4 - 2^2 + 1 $ <input class="answer-input" data-correct="17" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD18">Hint</button> <button class="idk" data-question="E18. Calculate: 5 × 4 - 2^2 + 1">I don't know</button><div id="hintD18" class="hint">Indices: $2^2 = 4$. Multiply: $5 \\times 4 = 20$. Then left to right: $20 - 4 = 16$, then $16 + 1 = 17$.</div>` },
+            { id: 'D19', displayHtml: `<span class="qnum">E19.</span> Calculate: $ 36 \\div (2 \\times 3) + 5 $ <input class="answer-input" data-correct="11" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD19">Hint</button> <button class="idk" data-question="E19. Calculate: 36 ÷ (2 × 3) + 5">I don't know</button><div id="hintD19" class="hint">Brackets: $2 \\times 3 = 6$. Divide: $36 \\div 6 = 6$. Add: $6 + 5 = 11$.</div>` },
+            { id: 'D20', displayHtml: `<span class="qnum">E20.</span> Calculate: $ 10 - 2 \\times (-5) $ <input class="answer-input" data-correct="20" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD20">Hint</button> <button class="idk" data-question="E20. Calculate: 10 - 2 × (-5)">I don't know</button><div id="hintD20" class="hint">Multiply first: $2 \\times (-5) = -10$. Subtract: $10 - (-10) = 10 + 10 = 20$.</div>` },
+            { id: 'D21', displayHtml: `<span class="qnum">E21.</span> Calculate: $ (15 - 3) \\div 4 + 7 $ <input class="answer-input" data-correct="10" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD21">Hint</button> <button class="idk" data-question="E21. Calculate: (15 - 3) ÷ 4 + 7">I don't know</button><div id="hintD21" class="hint">Brackets: $15 - 3 = 12$. Divide: $12 \\div 4 = 3$. Add: $3 + 7 = 10$.</div>` },
+            { id: 'D22', displayHtml: `<span class="qnum">E22.</span> Calculate: $ 6 + 2 \\times 3^2 $ <input class="answer-input" data-correct="24" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD22">Hint</button> <button class="idk" data-question="E22. Calculate: 6 + 2 × 3^2">I don't know</button><div id="hintD22" class="hint">Indices: $3^2 = 9$. Multiply: $2 \\times 9 = 18$. Add: $6 + 18 = 24$.</div>` },
+            { id: 'D23', displayHtml: `<span class="qnum">E23.</span> Calculate: $ 12 \\div (-2) + 5 $ <input class="answer-input" data-correct="-1" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD23">Hint</button> <button class="idk" data-question="E23. Calculate: 12 ÷ (-2) + 5">I don't know</button><div id="hintD23" class="hint">Divide first: $12 \\div (-2) = -6$. Then add: $-6 + 5 = -1$.</div>` },
+            { id: 'D24', displayHtml: `<span class="qnum">E24.</span> Calculate: $ (10 - 4)^2 \\div 9 $ <input class="answer-input" data-correct="4" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD24">Hint</button> <button class="idk" data-question="E24. Calculate: (10 - 4)^2 ÷ 9">I don't know</button><div id="hintD24" class="hint">Brackets: $10 - 4 = 6$. Indices: $6^2 = 36$. Divide: $36 \\div 9 = 4$.</div>` },
+            { id: 'D25', displayHtml: `<span class="qnum">E25.</span> Calculate: $ 7 \\times (-3) + 10 $ <input class="answer-input" data-correct="-11" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD25">Hint</button> <button class="idk" data-question="E25. Calculate: 7 × (-3) + 10">I don't know</button><div id="hintD25" class="hint">Multiply first: $7 \\times (-3) = -21$. Then add: $-21 + 10 = -11$.</div>` },
+            { id: 'D26', displayHtml: `<span class="qnum">E26.</span> Calculate: $ 2 + 3 \\times 4 - 5 \\div 1 $ <input class="answer-input" data-correct="9" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD26">Hint</button> <button class="idk" data-question="E26. Calculate: 2 + 3 × 4 - 5 ÷ 1">I don't know</button><div id="hintD26" class="hint">Multiply/Divide: $3 \\times 4 = 12$, $5 \\div 1 = 5$. Left to right: $2 + 12 - 5 = 14 - 5 = 9$.</div>` },
+            { id: 'D27', displayHtml: `<span class="qnum">E27.</span> Calculate: $ (8 + 2) \\times (9 - 4) $ <input class="answer-input" data-correct="50" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD27">Hint</button> <button class="idk" data-question="E27. Calculate: (8 + 2) × (9 - 4)">I don't know</button><div id="hintD27" class="hint">Brackets: $8 + 2 = 10$, $9 - 4 = 5$. Then multiply: $10 \\times 5 = 50$.</div>` },
+            { id: 'D28', displayHtml: `<span class="qnum">E28.</span> Calculate: $ 1/2 \\times (4 + 6) $ <input class="answer-input" data-correct="5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD28">Hint</button> <button class="idk" data-question="E28. Calculate: 1/2 × (4 + 6)">I don't know</button><div id="hintD28" class="hint">Brackets: $4 + 6 = 10$. Then multiply: $1/2 \\times 10 = 5$.</div>` },
+            { id: 'D29', displayHtml: `<span class="qnum">E29.</span> Calculate: $ 20 - (4^2) + 3 $ <input class="answer-input" data-correct="7" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD29">Hint</button> <button class="idk" data-question="E29. Calculate: 20 - (4^2) + 3">I don't know</button><div id="hintD29" class="hint">Indices: $4^2 = 16$. Then left to right: $20 - 16 = 4$, then $4 + 3 = 7$.</div>` },
+            { id: 'D30', displayHtml: `<span class="qnum">E30.</span> Calculate: $ (-5) + (-3) \\times 2 $ <input class="answer-input" data-correct="-11" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD30">Hint</button> <button class="idk" data-question="E30. Calculate: (-5) + (-3) × 2">I don't know</button><div id="hintD30" class="hint">Multiply first: $(-3) \\times 2 = -6$. Then add: $-5 + (-6) = -11$.</div>` },
+            { id: 'D31', displayHtml: `<span class="qnum">E31.</span> Calculate: $ (10 - 2) \\div (1 + 3) $ <input class="answer-input" data-correct="2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD31">Hint</button> <button class="idk" data-question="E31. Calculate: (10 - 2) ÷ (1 + 3)">I don't know</button><div id="hintD31" class="hint">Brackets: $10 - 2 = 8$, $1 + 3 = 4$. Then divide: $8 \\div 4 = 2$.</div>` },
+            { id: 'D32', displayHtml: `<span class="qnum">E32.</span> Calculate: $ 15 \\div 3 - 2 \\times 1 $ <input class="answer-input" data-correct="3" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD32">Hint</button> <button class="idk" data-question="E32. Calculate: 15 ÷ 3 - 2 × 1">I don't know</button><div id="hintD32" class="hint">Divide: $15 \\div 3 = 5$. Multiply: $2 \\times 1 = 2$. Then subtract: $5 - 2 = 3$.</div>` },
+            { id: 'D33', displayHtml: `<span class="qnum">E33.</span> Calculate: $ 4 \\times (5 - 2) - 3^2 $ <input class="answer-input" data-correct="3" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD33">Hint</button> <button class="idk" data-question="E33. Calculate: 4 × (5 - 2) - 3^2">I don't know</button><div id="hintD33" class="hint">Brackets: $5 - 2 = 3$. Indices: $3^2 = 9$. Multiply: $4 \\times 3 = 12$. Subtract: $12 - 9 = 3$.</div>` },
+            { id: 'D34', displayHtml: `<span class="qnum">E34.</span> Calculate: $ 25 - 5 \\times 2 + 10 $ <input class="answer-input" data-correct="25" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD34">Hint</button> <button class="idk" data-question="E34. Calculate: 25 - 5 × 2 + 10">I don't know</button><div id="hintD34" class="hint">Multiply first: $5 \\times 2 = 10$. Then left to right: $25 - 10 = 15$, then $15 + 10 = 25$.</div>` },
+            { id: 'D35', displayHtml: `<span class="qnum">E35.</span> Calculate: $ (7 + 1)^2 \\div 8 $ <input class="answer-input" data-correct="8" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD35">Hint</button> <button class="idk" data-question="E35. Calculate: (7 + 1)^2 ÷ 8">I don't know</button><div id="hintD35" class="hint">Brackets: $7 + 1 = 8$. Indices: $8^2 = 64$. Divide: $64 \\div 8 = 8$.</div>` },
+            { id: 'D36', displayHtml: `<span class="qnum">E36.</span> Calculate: $ -10 \\div 5 + 7 $ <input class="answer-input" data-correct="5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD36">Hint</button> <button class="idk" data-question="E36. Calculate: -10 ÷ 5 + 7">I don't know</button><div id="hintD36" class="hint">Divide first: $-10 \\div 5 = -2$. Then add: $-2 + 7 = 5$.</div>` },
+            { id: 'D37', displayHtml: `<span class="qnum">E37.</span> Calculate: $ 2 \\times (-3) - (-4) $ <input class="answer-input" data-correct="-2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD37">Hint</button> <button class="idk" data-question="E37. Calculate: 2 × (-3) - (-4)">I don't know</button><div id="hintD37" class="hint">Multiply: $2 \\times (-3) = -6$. Subtracting a negative is adding: $-6 - (-4) = -6 + 4 = -2$.</div>` },
+            { id: 'D38', displayHtml: `<span class="qnum">E38.</span> Calculate: $ (12 - 2) \\div 5 - 1 $ <input class="answer-input" data-correct="1" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD38">Hint</button> <button class="idk" data-question="E38. Calculate: (12 - 2) ÷ 5 - 1">I don't know</button><div id="hintD38" class="hint">Brackets: $12 - 2 = 10$. Divide: $10 \\div 5 = 2$. Subtract: $2 - 1 = 1$.</div>` },
+            { id: 'D39', displayHtml: `<span class="qnum">E39.</span> Calculate: $ 3 + 4^2 \\div 2 $ <input class="answer-input" data-correct="11" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD39">Hint</button> <button class="idk" data-question="E39. Calculate: 3 + 4^2 ÷ 2">I don't know</button><div id="hintD39" class="hint">Indices: $4^2 = 16$. Divide: $16 \\div 2 = 8$. Add: $3 + 8 = 11$.</div>` },
+            { id: 'D40', displayHtml: `<span class="qnum">E40.</span> Calculate: $ 2 \\times 5 + 10 \\div 2 $ <input class="answer-input" data-correct="15" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD40">Hint</button> <button class="idk" data-question="E40. Calculate: 2 × 5 + 10 ÷ 2">I don't know</button><div id="hintD40" class="hint">Multiply: $2 \\times 5 = 10$. Divide: $10 \\div 2 = 5$. Add: $10 + 5 = 15$.</div>` },
+            { id: 'D41', displayHtml: `<span class="qnum">E41.</span> Calculate: $ (6 + 9) \\div 3 \\times 2 $ <input class="answer-input" data-correct="10" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD41">Hint</button> <button class="idk" data-question="E41. Calculate: (6 + 9) ÷ 3 × 2">I don't know</button><div id="hintD41" class="hint">Brackets: $6 + 9 = 15$. Divide: $15 \\div 3 = 5$. Multiply: $5 \\times 2 = 10$.</div>` },
+            { id: 'D42', displayHtml: `<span class="qnum">E42.</span> Calculate: $ 4^3 - 20 \\times 3 $ <input class="answer-input" data-correct="4" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD42">Hint</button> <button class="idk" data-question="E42. Calculate: 4^3 - 20 × 3">I don't know</button><div id="hintD42" class="hint">Indices: $4^3 = 64$. Multiply: $20 \\times 3 = 60$. Subtract: $64 - 60 = 4$.</div>` },
+            { id: 'D43', displayHtml: `<span class="qnum">E43.</span> Calculate: $ 1/4 + 1/2 \\times 2/3 $ <input class="answer-input" data-correct="0.58" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD43">Hint</button> <button class="idk" data-question="E43. Calculate: 1/4 + 1/2 × 2/3">I don't know</button><div id="hintD43" class="hint">Multiply: $1/2 \\times 2/3 = 2/6 = 1/3$. Add: $1/4 + 1/3 = 3/12 + 4/12 = 7/12 \\approx 0.58$.</div>` },
+            { id: 'D44', displayHtml: `<span class="qnum">E44.</span> Calculate: $ (5 + 3) \\times (10 - 5) $ <input class="answer-input" data-correct="40" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD44">Hint</button> <button class="idk" data-question="E44. Calculate: (5 + 3) × (10 - 5)">I don't know</button><div id="hintD44" class="hint">Brackets: $5 + 3 = 8$, $10 - 5 = 5$. Multiply: $8 \\times 5 = 40$.</div>` },
+            { id: 'D45', displayHtml: `<span class="qnum">E45.</span> Calculate: $ 18 \\div 9 - 4 \\times (-1) $ <input class="answer-input" data-correct="6" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD45">Hint</button> <button class="idk" data-question="E45. Calculate: 18 ÷ 9 - 4 × (-1)">I don't know</button><div id="hintD45" class="hint">Divide: $18 \\div 9 = 2$. Multiply: $4 \\times (-1) = -4$. Subtract: $2 - (-4) = 2 + 4 = 6$.</div>` },
+            { id: 'D46', displayHtml: `<span class="qnum">E46.</span> Calculate: $ (-2)^2 + 3 \\times (-5) $ <input class="answer-input" data-correct="-11" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD46">Hint</button> <button class="idk" data-question="E46. Calculate: (-2)^2 + 3 × (-5)">I don't know</button><div id="hintD46" class="hint">Indices: $(-2)^2 = 4$. Multiply: $3 \\times (-5) = -15$. Add: $4 + (-15) = -11$.</div>` },
+            { id: 'D47', displayHtml: `<span class="qnum">E47.</span> Calculate: $ 24 \\div (2 \\times 4) + 1 $ <input class="answer-input" data-correct="4" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD47">Hint</button> <button class="idk" data-question="E47. Calculate: 24 ÷ (2 × 4) + 1">I don't know</button><div id="hintD47" class="hint">Brackets: $2 \\times 4 = 8$. Divide: $24 \\div 8 = 3$. Add: $3 + 1 = 4$.</div>` },
+            { id: 'D48', displayHtml: `<span class="qnum">E48.</span> Calculate: $ 7 + (3 - 8) \\times 2 $ <input class="answer-input" data-correct="-3" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD48">Hint</button> <button class="idk" data-question="E48. Calculate: 7 + (3 - 8) × 2">I don't know</button><div id="hintD48" class="hint">Brackets: $3 - 8 = -5$. Multiply: $(-5) \\times 2 = -10$. Add: $7 + (-10) = -3$.</div>` },
+            { id: 'D49', displayHtml: `<span class="qnum">E49.</span> Calculate: $ 100 - 10^2 \\div 2 $ <input class="answer-input" data-correct="50" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD49">Hint</button> <button class="idk" data-question="E49. Calculate: 100 - 10^2 ÷ 2">I don't know</button><div id="hintD49" class="hint">Indices: $10^2 = 100$. Divide: $100 \\div 2 = 50$. Subtract: $100 - 50 = 50$.</div>` },
+            { id: 'D50', displayHtml: `<span class="qnum">E50.</span> Calculate: $ 2.5 \\times 4 - 5.5 $ <input class="answer-input" data-correct="4.5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD50">Hint</button> <button class="idk" data-question="E50. Calculate: 2.5 × 4 - 5.5">I don't know</button><div id="hintD50" class="hint">Multiply first: $2.5 \\times 4 = 10$. Then subtract: $10 - 5.5 = 4.5$.</div>` },
+            { id: 'D51', displayHtml: `<span class="qnum">E51.</span> Calculate: $ 12 + (-4) \\times 3 $ <input class="answer-input" data-correct="0" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD51">Hint</button> <button class="idk" data-question="E51. Calculate: 12 + (-4) × 3">I don't know</button><div id="hintD51" class="hint">Multiply first: $(-4) \\times 3 = -12$. Then add: $12 + (-12) = 0$.</div>` },
+            { id: 'D52', displayHtml: `<span class="qnum">E52.</span> Calculate: $ 1/2 \\div 1/4 - 1 $ <input class="answer-input" data-correct="1" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD52">Hint</button> <button class="idk" data-question="E52. Calculate: 1/2 ÷ 1/4 - 1">I don't know</button><div id="hintD52" class="hint">Divide (invert and multiply): $1/2 \\div 1/4 = 1/2 \\times 4/1 = 4/2 = 2$. Then subtract: $2 - 1 = 1$.</div>` },
+            { id: 'D53', displayHtml: `<span class="qnum">E53.</span> Calculate: $ (10 \\div 2) + (3 \\times 4) $ <input class="answer-input" data-correct="17" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD53">Hint</button> <button class="idk" data-question="E53. Calculate: (10 ÷ 2) + (3 × 4)">I don't know</button><div id="hintD53" class="hint">Solve brackets: $10 \\div 2 = 5$, $3 \\times 4 = 12$. Add: $5 + 12 = 17$.</div>` },
+            { id: 'D54', displayHtml: `<span class="qnum">E54.</span> Calculate: $ 5^2 - 3 \\times 7 + 2 $ <input class="answer-input" data-correct="6" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD54">Hint</button> <button class="idk" data-question="E54. Calculate: 5^2 - 3 × 7 + 2">I don't know</button><div id="hintD54" class="hint">Indices: $5^2 = 25$. Multiply: $3 \\times 7 = 21$. Left to right: $25 - 21 = 4$, then $4 + 2 = 6$.</div>` },
+            { id: 'D55', displayHtml: `<span class="qnum">E55.</span> Calculate: $ 4 \\times (10 - 2^3) $ <input class="answer-input" data-correct="8" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD55">Hint</button> <button class="idk" data-question="E55. Calculate: 4 × (10 - 2^3)">I don't know</button><div id="hintD55" class="hint">Inside brackets: Indices $2^3 = 8$. Then $10 - 8 = 2$. Multiply: $4 \\times 2 = 8$.</div>` },
+            { id: 'D56', displayHtml: `<span class="qnum">E56.</span> Calculate: $ -15 + 3 \\times 4 $ <input class="answer-input" data-correct="-3" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD56">Hint</button> <button class="idk" data-question="E56. Calculate: -15 + 3 × 4">I don't know</button><div id="hintD56" class="hint">Multiply first: $3 \\times 4 = 12$. Then add: $-15 + 12 = -3$.</div>` },
+            { id: 'D57', displayHtml: `<span class="qnum">E57.</span> Calculate: $ (7 + 5) \\div (-4) $ <input class="answer-input" data-correct="-3" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD57">Hint</button> <button class="idk" data-question="E57. Calculate: (7 + 5) ÷ (-4)">I don't know</button><div id="hintD57" class="hint">Brackets: $7 + 5 = 12$. Divide: $12 \\div (-4) = -3$.</div>` },
+            { id: 'D58', displayHtml: `<span class="qnum">E58.</span> Calculate: $ 1/2 + 1/2 \\times 0 $ <input class="answer-input" data-correct="0.5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD58">Hint</button> <button class="idk" data-question="E58. Calculate: 1/2 + 1/2 × 0">I don't know</button><div id="hintD58" class="hint">Multiply first: $1/2 \\times 0 = 0$. Then add: $1/2 + 0 = 1/2 = 0.5$.</div>` },
+            { id: 'D59', displayHtml: `<span class="qnum">E59.</span> Calculate: $ 5 \\times (6 - 2) \\div 10 $ <input class="answer-input" data-correct="2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD59">Hint</button> <button class="idk" data-question="E59. Calculate: 5 × (6 - 2) ÷ 10">I don't know</button><div id="hintD59" class="hint">Brackets: $6 - 2 = 4$. Then left to right multiply/divide: $5 \\times 4 = 20$, then $20 \\div 10 = 2$.</div>` },
+            { id: 'D60', displayHtml: `<span class="qnum">E60.</span> Calculate: $ (8 - 2) + 3 \\times 5 $ <input class="answer-input" data-correct="21" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD60">Hint</button> <button class="idk" data-question="E60. Calculate: (8 - 2) + 3 × 5">I don't know</button><div id="hintD60" class="hint">Brackets: $8 - 2 = 6$. Multiply: $3 \\times 5 = 15$. Add: $6 + 15 = 21$.</div>` },
+            { id: 'D61', displayHtml: `<span class="qnum">E61.</span> Calculate: $ 3^3 - 7 \\times 2 $ <input class="answer-input" data-correct="13" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD61">Hint</button> <button class="idk" data-question="E61. Calculate: 3^3 - 7 × 2">I don't know</button><div id="hintD61" class="hint">Indices: $3^3 = 27$. Multiply: $7 \\times 2 = 14$. Subtract: $27 - 14 = 13$.</div>` },
+            { id: 'D62', displayHtml: `<span class="qnum">E62.</span> Calculate: $ 10 - (-5) \\times 2 $ <input class="answer-input" data-correct="20" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD62">Hint</button> <button class="idk" data-question="E62. Calculate: 10 - (-5) × 2">I don't know</button><div id="hintD62" class="hint">Multiply first: $(-5) \\times 2 = -10$. Subtracting a negative is adding: $10 - (-10) = 10 + 10 = 20$.</div>` },
+            { id: 'D63', displayHtml: `<span class="qnum">E63.</span> Calculate: $ 20 \\div 4 - 3 + 1 $ <input class="answer-input" data-correct="3" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD63">Hint</button> <button class="idk" data-question="E63. Calculate: 20 ÷ 4 - 3 + 1">I don't know</button><div id="hintD63" class="hint">Divide: $20 \\div 4 = 5$. Then left to right: $5 - 3 = 2$, then $2 + 1 = 3$.</div>` },
+            { id: 'D64', displayHtml: `<span class="qnum">E64.</span> Calculate: $ (1 + 1)^4 - 10 $ <input class="answer-input" data-correct="6" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD64">Hint</button> <button class="idk" data-question="E64. Calculate: (1 + 1)^4 - 10">I don't know</button><div id="hintD64" class="hint">Brackets: $1 + 1 = 2$. Indices: $2^4 = 16$. Subtract: $16 - 10 = 6$.</div>` },
+            { id: 'D65', displayHtml: `<span class="qnum">E65.</span> Calculate: $ 6 + 2 \\times (1 - 5) $ <input class="answer-input" data-correct="-2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD65">Hint</button> <button class="idk" data-question="E65. Calculate: 6 + 2 × (1 - 5)">I don't know</button><div id="hintD65" class="hint">Brackets: $1 - 5 = -4$. Multiply: $2 \\times (-4) = -8$. Add: $6 + (-8) = -2$.</div>` },
+            { id: 'D66', displayHtml: `<span class="qnum">E66.</span> Calculate: $ 30 \\div (-5) + 2 $ <input class="answer-input" data-correct="-4" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD66">Hint</button> <button class="idk" data-question="E66. Calculate: 30 ÷ (-5) + 2">I don't know</button><div id="hintD66" class="hint">Divide: $30 \\div (-5) = -6$. Add: $-6 + 2 = -4$.</div>` },
+            { id: 'D67', displayHtml: `<span class="qnum">E67.</span> Calculate: $ (7 - 2)^2 \\times 3 $ <input class="answer-input" data-correct="75" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD67">Hint</button> <button class="idk" data-question="E67. Calculate: (7 - 2)^2 × 3">I don't know</button><div id="hintD67" class="hint">Brackets: $7 - 2 = 5$. Indices: $5^2 = 25$. Multiply: $25 \\times 3 = 75$.</div>` },
+            { id: 'D68', displayHtml: `<span class="qnum">E68.</span> Calculate: $ 1.0 + 0.5 \\times 4 $ <input class="answer-input" data-correct="3" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD68">Hint</button> <button class="idk" data-question="E68. Calculate: 1.0 + 0.5 × 4">I don't know</button><div id="hintD68" class="hint">Multiply first: $0.5 \\times 4 = 2$. Then add: $1.0 + 2 = 3$.</div>` },
+            { id: 'D69', displayHtml: `<span class="qnum">E69.</span> Calculate: $ 1/3 \\times (9 - 3) $ <input class="answer-input" data-correct="2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD69">Hint</button> <button class="idk" data-question="E69. Calculate: 1/3 × (9 - 3)">I don't know</button><div id="hintD69" class="hint">Brackets: $9 - 3 = 6$. Multiply: $1/3 \\times 6 = 2$.</div>` },
+            { id: 'D70', displayHtml: `<span class="qnum">E70.</span> Calculate: $ 11 - 3 + 2 \\times 5 $ <input class="answer-input" data-correct="18" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD70">Hint</button> <button class="idk" data-question="E70. Calculate: 11 - 3 + 2 × 5">I don't know</button><div id="hintD70" class="hint">Multiply first: $2 \\times 5 = 10$. Then left to right: $11 - 3 = 8$, then $8 + 10 = 18$.</div>` },
+            { id: 'D71', displayHtml: `<span class="qnum">E71.</span> Calculate: $ (10 + 6) \\div 2^2 $ <input class="answer-input" data-correct="4" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD71">Hint</button> <button class="idk" data-question="E71. Calculate: (10 + 6) ÷ 2^2">I don't know</button><div id="hintD71" class="hint">Brackets: $10 + 6 = 16$. Indices: $2^2 = 4$. Divide: $16 \\div 4 = 4$.</div>` },
+            { id: 'D72', displayHtml: `<span class="qnum">E72.</span> Calculate: $ -8 \\div (-2) - 1 $ <input class="answer-input" data-correct="3" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD72">Hint</button> <button class="idk" data-question="E72. Calculate: -8 ÷ (-2) - 1">I don't know</button><div id="hintD72" class="hint">Divide first: $-8 \\div (-2) = 4$. Subtract: $4 - 1 = 3$.</div>` },
+            { id: 'D73', displayHtml: `<span class="qnum">E73.</span> Calculate: $ 5 \\times 2 + 8 \\div 4 - 3 $ <input class="answer-input" data-correct="9" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD73">Hint</button> <button class="idk" data-question="E73. Calculate: 5 × 2 + 8 ÷ 4 - 3">I don't know</button><div id="hintD73" class="hint">Multiply: $5 \\times 2 = 10$. Divide: $8 \\div 4 = 2$. Left to right: $10 + 2 - 3 = 12 - 3 = 9$.</div>` },
+            { id: 'D74', displayHtml: `<span class="qnum">E74.</span> Calculate: $ (9 - 6)^2 + 2 \\times 5 $ <input class="answer-input" data-correct="19" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD74">Hint</button> <button class="idk" data-question="E74. Calculate: (9 - 6)^2 + 2 × 5">I don't know</button><div id="hintD74" class="hint">Brackets: $9 - 6 = 3$. Indices: $3^2 = 9$. Multiply: $2 \\times 5 = 10$. Add: $9 + 10 = 19$.</div>` },
+            { id: 'D75', displayHtml: `<span class="qnum">E75.</span> Calculate: $ 10 - 2 \\times (1 + 3) $ <input class="answer-input" data-correct="2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD75">Hint</button> <button class="idk" data-question="E75. Calculate: 10 - 2 × (1 + 3)">I don't know</button><div id="hintD75" class="hint">Brackets: $1 + 3 = 4$. Multiply: $2 \\times 4 = 8$. Subtract: $10 - 8 = 2$.</div>` },
+            { id: 'D76', displayHtml: `<span class="qnum">E76.</span> Calculate: $ 1/2 \\times 6 - 3/2 $ <input class="answer-input" data-correct="1.5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD76">Hint</button> <button class="idk" data-question="E76. Calculate: 1/2 × 6 - 3/2">I don't know</button><div id="hintD76" class="hint">Multiply: $1/2 \\times 6 = 3$. Subtract: $3 - 3/2 = 3 - 1.5 = 1.5$.</div>` },
+            { id: 'D77', displayHtml: `<span class="qnum">E77.</span> Calculate: $ (20 \\div 5) + (3 \\times 2) $ <input class="answer-input" data-correct="10" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD77">Hint</button> <button class="idk" data-question="E77. Calculate: (20 ÷ 5) + (3 × 2)">I don't know</button><div id="hintD77" class="hint">Brackets: $20 \\div 5 = 4$, $3 \\times 2 = 6$. Add: $4 + 6 = 10$.</div>` },
+            { id: 'D78', displayHtml: `<span class="qnum">E78.</span> Calculate: $ 4^2 + 2 \\times (-3) $ <input class="answer-input" data-correct="10" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD78">Hint</button> <button class="idk" data-question="E78. Calculate: 4^2 + 2 × (-3)">I don't know</button><div id="hintD78" class="hint">Indices: $4^2 = 16$. Multiply: $2 \\times (-3) = -6$. Add: $16 + (-6) = 10$.</div>` },
+            { id: 'D79', displayHtml: `<span class="qnum">E79.</span> Calculate: $ 25 - (10 - 2) \\times 2 $ <input class="answer-input" data-correct="9" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD79">Hint</button> <button class="idk" data-question="E79. Calculate: 25 - (10 - 2) × 2">I don't know</button><div id="hintD79" class="hint">Brackets: $10 - 2 = 8$. Multiply: $8 \\times 2 = 16$. Subtract: $25 - 16 = 9$.</div>` },
+            { id: 'D80', displayHtml: `<span class="qnum">E80.</span> Calculate: $ -12 + (-3) \\times (-4) $ <input class="answer-input" data-correct="0" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD80">Hint</button> <button class="idk" data-question="E80. Calculate: -12 + (-3) × (-4)">I don't know</button><div id="hintD80" class="hint">Multiply first: $(-3) \\times (-4) = 12$. Add: $-12 + 12 = 0$.</div>` },
+            { id: 'D81', displayHtml: `<span class="qnum">E81.</span> Calculate: $ (10 + 5) \\div (3 - 0) $ <input class="answer-input" data-correct="5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD81">Hint</button> <button class="idk" data-question="E81. Calculate: (10 + 5) ÷ (3 - 0)">I don't know</button><div id="hintD81" class="hint">Brackets: $10 + 5 = 15$, $3 - 0 = 3$. Divide: $15 \\div 3 = 5$.</div>` },
+            { id: 'D82', displayHtml: `<span class="qnum">E82.</span> Calculate: $ 5 - 2^3 + 1 $ <input class="answer-input" data-correct="-2" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD82">Hint</button> <button class="idk" data-question="E82. Calculate: 5 - 2^3 + 1">I don't know</button><div id="hintD82" class="hint">Indices: $2^3 = 8$. Left to right: $5 - 8 = -3$, then $-3 + 1 = -2$.</div>` },
+            { id: 'D83', displayHtml: `<span class="qnum">E83.</span> Calculate: $ 3 \\times (4 - 2) + 7 $ <input class="answer-input" data-correct="13" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD83">Hint</button> <button class="idk" data-question="E83. Calculate: 3 × (4 - 2) + 7">I don't know</button><div id="hintD83" class="hint">Brackets: $4 - 2 = 2$. Multiply: $3 \\times 2 = 6$. Add: $6 + 7 = 13$.</div>` },
+            { id: 'D84', displayHtml: `<span class="qnum">E84.</span> Calculate: $ 16 \\div (8 - 4) \\times 2 $ <input class="answer-input" data-correct="8" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD84">Hint</button> <button class="idk" data-question="E84. Calculate: 16 ÷ (8 - 4) × 2">I don't know</button><div id="hintD84" class="hint">Brackets: $8 - 4 = 4$. Left to right: $16 \\div 4 = 4$, then $4 \\times 2 = 8$.</div>` },
+            { id: 'D85', displayHtml: `<span class="qnum">E85.</span> Calculate: $ 1/2 + 1/4 - 1/8 $ <input class="answer-input" data-correct="0.625" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD85">Hint</button> <button class="idk" data-question="E85. Calculate: 1/2 + 1/4 - 1/8">I don't know</button><div id="hintD85" class="hint">Common denominator is 8: $4/8 + 2/8 - 1/8 = 6/8 - 1/8 = 5/8 = 0.625$.</div>` },
+            { id: 'D86', displayHtml: `<span class="qnum">E86.</span> Calculate: $ (5 + 2) \\times 3 - 4 $ <input class="answer-input" data-correct="17" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD86">Hint</button> <button class="idk" data-question="E86. Calculate: (5 + 2) × 3 - 4">I don't know</button><div id="hintD86" class="hint">Brackets first: $5 + 2 = 7$. Multiply: $7 \\times 3 = 21$. Subtract: $21 - 4 = 17$.</div>` },
+            { id: 'D87', displayHtml: `<span class="qnum">E87.</span> Calculate: $ 10 \\div (8 - 3) + 6 $ <input class="answer-input" data-correct="8" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD87">Hint</button> <button class="idk" data-question="E87. Calculate: 10 ÷ (8 - 3) + 6">I don't know</button><div id="hintD87" class="hint">Brackets first: $8 - 3 = 5$. Divide: $10 \\div 5 = 2$. Add: $2 + 6 = 8$.</div>` },
+            { id: 'D88', displayHtml: `<span class="qnum">E88.</span> Calculate: $ 2^2 + 3 \\times 5 - 1 $ <input class="answer-input" data-correct="18" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD88">Hint</button> <button class="idk" data-question="E88. Calculate: 2^2 + 3 × 5 - 1">I don't know</button><div id="hintD88" class="hint">Indices: $2^2 = 4$. Multiply: $3 \\times 5 = 15$. Left to right: $4 + 15 = 19$, then $19 - 1 = 18$.</div>` },
+            { id: 'D89', displayHtml: `<span class="qnum">E89.</span> Calculate: $ 15 - 5 \\times (-2) + 3 $ <input class="answer-input" data-correct="28" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD89">Hint</button> <button class="idk" data-question="E89. Calculate: 15 - 5 × (-2) + 3">I don't know</button><div id="hintD89" class="hint">Multiply: $5 \\times (-2) = -10$. Left to right: $15 - (-10) = 15 + 10 = 25$, then $25 + 3 = 28$.</div>` },
+            { id: 'D90', displayHtml: `<span class="qnum">E90.</span> Calculate: $ 40 \\div (2 \\times 5) - 1 $ <input class="answer-input" data-correct="3" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD90">Hint</button> <button class="idk" data-question="E90. Calculate: 40 ÷ (2 × 5) - 1">I don't know</button><div id="hintD90" class="hint">Brackets: $2 \\times 5 = 10$. Divide: $40 \\div 10 = 4$. Subtract: $4 - 1 = 3$.</div>` },
+            { id: 'D91', displayHtml: `<span class="qnum">E91.</span> Calculate: $ 8 + 6 \\div (-2) - 1 $ <input class="answer-input" data-correct="4" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD91">Hint</button> <button class="idk" data-question="E91. Calculate: 8 + 6 ÷ (-2) - 1">I don't know</button><div id="hintD91" class="hint">Divide: $6 \\div (-2) = -3$. Left to right: $8 + (-3) = 5$, then $5 - 1 = 4$.</div>` },
+            { id: 'D92', displayHtml: `<span class="qnum">E92.</span> Calculate: $ (9 - 3) \\times (1 + 2) \\div 6 $ <input class="answer-input" data-correct="3" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD92">Hint</button> <button class="idk" data-question="E92. Calculate: (9 - 3) × (1 + 2) ÷ 6">I don't know</button><div id="hintD92" class="hint">Brackets: $9 - 3 = 6$, $1 + 2 = 3$. Left to right: $6 \\times 3 = 18$, then $18 \\div 6 = 3$.</div>` },
+            { id: 'D93', displayHtml: `<span class="qnum">Q4.</span> The expression $10 - 3 \\times (8 - 12) \\div 2$ is equal to: <br>a. $16$ b. $4$ c. $26$ d. $1$ <br><input class="answer-input" data-correct="16" type="text" placeholder="Enter letter or number"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint4">Hint</button> <button class="idk" data-question="Q4. The expression 10 - 3 × (8 - 12) ÷ 2 is equal to:">I don't know</button><div id="hint4" class="hint">Brackets first: $8 - 12 = -4$. Then multiply: $3 \\times (-4) = -12$. Divide: $-12 \\div 2 = -6$. Finally, subtract: $10 - (-6) = 10 + 6 = 16$.</div>` },
+            { id: 'D94', displayHtml: `<span class="qnum">Q5.</span> A climber starts at an elevation of 20m, climbs 30m up, then descends 45m. Calculate their final elevation. <input class="answer-input" data-correct="5" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint5">Hint</button> <button class="idk" data-question="Q5. A climber starts at an elevation of 20m, climbs 30m up, then descends 45m. Calculate their final elevation.">I don't know</button><div id="hint5" class="hint">Start: $20m$. Climbs up: $20 + 30 = 50m$. Descends: $50 - 45 = 5m$.</div>` },
+            { id: 'D95', displayHtml: `<span class="qnum">Q6.</span> Alex claims there is no difference between $12 - 4 \\times (2 + 3)$ and $12 - 4 \\times 2 + 3$. Do you agree with Alex? Justify your answer with correct working. <br><textarea class="answer-input" data-correct="no" style="width: 300px; height: 100px;"></textarea><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint6">Hint</button> <button class="idk" data-question="Q6. Alex claims there is no difference between 12 - 4 × (2 + 3) and 12 - 4 × 2 + 3. Do you agree? Justify with working.">I don't know</button><div id="hint6" class="hint">First expression: $12 - 4 \\times (2 + 3) = 12 - 4 \\times 5 = 12 - 20 = -8$.<br>Second expression: $12 - 4 \\times 2 + 3 = 12 - 8 + 3 = 4 + 3 = 7$.<br>Since $-8 \\neq 7$, you do not agree with Alex. Brackets change the order!</div>` },
+            { id: 'D96', displayHtml: `<span class="qnum">Q7.</span> Emily buys 2 apples at $1.50 each, 3 oranges at $0.75 each, and 1 banana at $1.25. Determine the total amount Emily has to pay. <input class="answer-input" data-correct="6.50" type="text"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hint7">Hint</button> <button class="idk" data-question="Q7. Emily buys 2 apples at $1.50 each, 3 oranges at $0.75 each, and 1 banana at $1.25. Determine the total amount Emily has to pay.">I don't know</button><div id="hint7" class="hint">Apples: $2 \\times 1.50 = 3.00$. Oranges: $3 \\times 0.75 = 2.25$. Banana: $1.25$. Total: $3.00 + 2.25 + 1.25 = 6.50$. Multiply quantities first! 🍩</div>` }
+        ];
+
+        let initialQuestions = [];
+        let dynamicEquationsPool = [];
+
+        // Helper function to initialize questions at the start or upon reset
+        function initializeQuestions() {
+            initialQuestions = allPotentialEquations.filter(q => q.isInitial);
+            dynamicEquationsPool = allPotentialEquations.filter(q => !q.isInitial);
+
+            const practiceQuestionsOl = document.getElementById('practice-questions');
+            practiceQuestionsOl.innerHTML = ''; // Clear existing questions
+
+            initialQuestions.forEach((q, index) => {
+                const newLi = document.createElement('li');
+                newLi.innerHTML = q.displayHtml;
+                newLi.value = parseInt(q.id.replace('initial', '')); 
+                practiceQuestionsOl.appendChild(newLi);
+                attachEventListenersToNewQuestion(newLi);
+            });
+
+            if (typeof MathJax !== 'undefined' && MathJax.startup && MathJax.startup.promise) {
+                MathJax.startup.promise.then(() => {
+                    MathJax.typesetPromise([practiceQuestionsOl]);
+                });
+            }
+        }
+
+        // Function to attach event listeners to newly added question elements
+        function attachEventListenersToNewQuestion(newLi) {
+            const checkBtn = newLi.querySelector('.check-btn');
+            const hintBtn = newLi.querySelector('.hint-btn');
+            const idkBtn = newLi.querySelector('.idk');
+            const answerInput = newLi.querySelector('.answer-input');
+
+            if (checkBtn) {
+                checkBtn.addEventListener('click', () => {
+                    checkAnswer(answerInput, checkBtn);
+                });
+            }
+            if (hintBtn) {
+                hintBtn.addEventListener('click', () => {
+                    const hintId = hintBtn.dataset.hint;
+                    const hintDiv = document.getElementById(hintId);
+                    if (hintDiv) {
+                        hintDiv.style.display = hintDiv.style.display === 'block' ? 'none' : 'block';
+                    }
+                    const questionText = getQuestionString(hintBtn);
+                    struggledQuestions.add(questionText);
+                    
+                    addNewEquation(); 
+                    showModal("New challenge added for extra practice!");
+                    saveUserProgress(); // Save progress after hint
+                    
+                    if (typeof MathJax !== 'undefined' && MathJax.startup && MathJax.startup.promise) {
+                        MathJax.startup.promise.then(() => {
+                            MathJax.typesetPromise([hintDiv]);
+                        });
+                    }
+                });
+            }
+            if (idkBtn) {
+                idkBtn.addEventListener('click', () => {
+                    const q = idkBtn.dataset.question;
+                    const prompt = `Explain how to solve ${q} using BIDMAS, step by step, like teaching a 13-year-old.`;
+                    copyToClipboard(prompt);
+                    struggledQuestions.add(q);
+                    addNewEquation(); 
+                    showModal("New challenge added for extra practice!");
+                    saveUserProgress(); // Save progress after IDK
+                });
+            }
+            if (answerInput) {
+                answerInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const inputElement = e.target;
+                        const btn = inputElement.nextElementSibling; 
+                        checkAnswer(inputElement, btn);
+                    }
+                });
+            }
+        }
+
+        // Function to add a new equation dynamically
+        function addNewEquation() {
+            if (dynamicEquationsPool.length === 0) {
+                console.log("No more extra equations to add.");
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * dynamicEquationsPool.length);
+            const equationToAdd = dynamicEquationsPool.splice(randomIndex, 1)[0]; 
+
+            const practiceQuestionsOl = document.getElementById('practice-questions');
+            const newLi = document.createElement('li');
+            newLi.innerHTML = equationToAdd.displayHtml;
+            newLi.value = practiceQuestionsOl.children.length + 1; 
+            practiceQuestionsOl.appendChild(newLi);
+
+            attachEventListenersToNewQuestion(newLi);
+
+            if (typeof MathJax !== 'undefined' && MathJax.startup && MathJax.startup.promise) {
+                MathJax.startup.promise.then(() => {
+                    MathJax.typesetPromise([newLi]);
+                });
+            }
+        }
+
+        // Initial setup on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialization of questions happens AFTER Firebase auth is ready and progress is loaded.
+            // This ensures we load existing progress before rendering questions or setting defaults.
+        });
+        
+        function updateShards() {
+            shards++;
+            document.getElementById('progress-shards').textContent = shards;
+            if (shards % 10 === 0 && currentLevel < levels.length - 1) {
+                currentLevel++;
+                document.getElementById('adventure-level').textContent = levels[currentLevel];
+                showModal(`Woo-hoo! Level up to ${levels[currentLevel]}! You're a BIDMAS superstar, Dora! 🚀`);
+            }
+            updateAreasToReExploreDisplay(); // Update display on shard change
+            saveUserProgress(); // Save progress after shard update
+        }
+
+        function resetProgress() {
+            shards = 0;
+            currentLevel = 0;
+            struggledQuestions.clear();
+            incorrectlyAnsweredQuestions.clear();
+            
+            document.getElementById('progress-shards').textContent = shards;
+            document.getElementById('adventure-level').textContent = levels[0];
+            
+            document.querySelectorAll('.feedback').forEach(f => {
+                f.style.display = 'none';
+            });
+            document.querySelectorAll('.answer-input').forEach(i => {
+                i.value = '';
+                delete i.dataset.checked;
+            });
+            document.querySelectorAll('.hint').forEach(h => {
+                h.style.display = 'none';
+            });
+            
+            initializeQuestions(); 
+            updateAreasToReExploreDisplay(); // Update display after reset
+            saveUserProgress(); // Save empty progress state after reset
+        }
+
+        function generateReportContent() {
+            const struggledList = struggledQuestions.size > 0 ? Array.from(struggledQuestions).join('; ') : 'None';
+            let incorrectAnswersReport = '';
+            if (incorrectlyAnsweredQuestions.size > 0) {
+                incorrectAnswersReport += '\n\nEquations with Incorrect Attempts:\n';
+                incorrectlyAnsweredQuestions.forEach((details, question) => {
+                    incorrectAnswersReport += `- Question: ${question}\n  Your Answer: ${details.wrongAnswer}\n  Correct Answer: ${details.correctAnswer}\n`;
+                });
+            }
+
+            return `Total Shards: ${shards}\nAdventure Level: ${levels[currentLevel]}\nDaily Check-in Streak: 0\nMastery Badges: 🏆\nAreas to Re-Explore (needed hint or "I don't know"): ${struggledList}${incorrectAnswersReport}`;
+        }
+
+        function submitReportViaEmail() { // Renamed from shareReport
+            const report = generateReportContent();
+            console.log('Generated Email Report Body:\n', report); 
+            window.location.href = `mailto:trev2005+bilmas@gmail.com?subject=Dora's BIDMAS Report&body=${encodeURIComponent(report)}`;
+        }
+
+        function copyReportToClipboard() {
+            const report = generateReportContent();
+            copyToClipboard(report);
+        }
+
+        // Update the displayed Areas to Re-Explore and the full report content in real-time
+        function updateAreasToReExploreDisplay() {
+            const struggledHints = struggledQuestions.size > 0 ? Array.from(struggledQuestions).join('; ') : 'None';
+            let incorrectAttemptsSummary = '';
+            if (incorrectlyAnsweredQuestions.size > 0) {
+                const incorrectCount = incorrectlyAnsweredQuestions.size;
+                incorrectAttemptsSummary = `${incorrectCount} questions`;
+            } else {
+                incorrectAttemptsSummary = 'None';
+            }
+
+            // Update the summary lines
+            document.getElementById('summary-hints-idk').textContent = struggledHints;
+            document.getElementById('summary-incorrect').textContent = incorrectAttemptsSummary;
+
+            // Update the full report display area
+            fullReportDisplay.textContent = generateReportContent();
+        }
+
+        // Override Set.add and Set.clear to trigger display update AND save progress
+        const originalAddStruggled = struggledQuestions.add;
+        struggledQuestions.add = function(item) {
+            originalAddStruggled.apply(this, arguments);
+            updateAreasToReExploreDisplay();
+            saveUserProgress(); // Save progress when a question is marked as struggled
+        };
+        const originalClearStruggled = struggledQuestions.clear;
+        struggledQuestions.clear = function() {
+            originalClearStruggled.apply(this, arguments);
+            updateAreasToReExploreDisplay();
+            saveUserProgress(); // Save progress when struggled questions are cleared
+        };
+        // Map.set and Map.delete on incorrectlyAnsweredQuestions are handled in checkAnswer,
+        // which already calls saveUserProgress.
+    </script>
+</body>
+</html>
