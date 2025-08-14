@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Math Quest: Year 7 Study Guide</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fff8f0;
+      color: #333;
+      margin: 2em;
+    }
+    h1 {
+      color: #ff6f61;
+    }
+    .question {
+      margin-bottom: 2em;
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .choices button {
+      display: block;
+      margin: 0.5em 0;
+      padding: 0.5em;
+      background: #e0f7fa;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+    }
+    .choices button:hover {
+      background: #b2ebf2;
+    }
+    .feedback {
+      margin-top: 1em;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    .progress {
+      margin-top: 2em;
+      font-size: 1em;
+      color: #555;
+    }
+    button#next {
+      margin-top: 1em;
+      padding: 0.5em 1em;
+      background: #ffd54f;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧠 Math Quest: Year 7 Study Guide</h1>
+  <p>Welcome, explorer! Ready to level up your math powers? 💪</p>
+
+  <div id="question-container" class="question"></div>
+  <div id="feedback" class="feedback"></div>
+  <button id="next" onclick="nextQuestion()">Next Challenge ➡️</button>
+
+  <div class="progress">
+    <p id="progress">🔥 Streak: 0 • ✅ Correct: 0/0</p>
+  </div>
+
+  <script>
+    const questionBank = [
+      {
+        id: 'num-1',
+        topic: 'Number Sense',
+        difficulty: 1,
+        type: 'mcq',
+        prompt: '🧮 Which number is a multiple of both 3 and 4?',
+        choices: ['12', '15', '18', '24'],
+        answer: ['12'],
+        explanation: 'Nice! 12 is divisible by both 3 and 4: 3×4 = 12.',
+        hint: 'Try dividing each number by 3 and 4.'
+      },
+      {
+        id: 'frac-1',
+        topic: 'Fractions',
+        difficulty: 1,
+        type: 'mcq',
+        prompt: '🍕 Which fraction is the same as half a pizza?',
+        choices: ['1/2', '2/3', '3/4', '1/3'],
+        answer: ['1/2'],
+        explanation: 'Correct! 1/2 means one out of two equal parts.',
+        hint: 'Think about slicing a pizza into two equal parts.'
+      },
+      {
+        id: 'dec-1',
+        topic: 'Decimals',
+        difficulty: 1,
+        type: 'mcq',
+        prompt: '💡 Which decimal is equal to 3/10?',
+        choices: ['0.3', '0.03', '0.33', '0.13'],
+        answer: ['0.3'],
+        explanation: 'Spot on! 3 divided by 10 equals 0.3.',
+        hint: 'Divide 3 by 10 using a calculator or long division.'
+      },
+      {
+        id: 'perc-1',
+        topic: 'Percentages',
+        difficulty: 1,
+        type: 'mcq',
+        prompt: '🎯 What is 25% of 80?',
+        choices: ['20', '25', '30', '40'],
+        answer: ['20'],
+        explanation: 'You got it! 25% means one quarter. 80 ÷ 4 = 20.',
+        hint: 'Break 80 into four equal parts.'
+      },
+      {
+        id: 'alg-1',
+        topic: 'Algebra',
+        difficulty: 1,
+        type: 'mcq',
+        prompt: '🔍 If x + 5 = 12, what is x?',
+        choices: ['7', '8', '6', '5'],
+        answer: ['7'],
+        explanation: 'Great thinking! Subtract 5 from both sides: x = 7.',
+        hint: 'Undo the +5 by subtracting.'
+      },
+      {
+        id: 'reason-1',
+        topic: 'Reasoning',
+        difficulty: 1,
+        type: 'mcq',
+        prompt: '🤔 Why is 0.5 the same as 1/2?',
+        choices: [
+          'Because 0.5 is half of 1',
+          'Because 5 is half of 10',
+          'Because 0.5 is a decimal',
+          'Because 1/2 is a fraction'
+        ],
+        answer: ['Because 0.5 is half of 1'],
+        explanation: 'Exactly! 0.5 means half of one whole, just like 1/2.',
+        hint: 'Think about what 0.5 represents.'
+      }
+    ];
+
+    let current = 0;
+    let correct = 0;
+    let total = 0;
+    let streak = 0;
+
+    function loadQuestion() {
+      const q = questionBank[current];
+      const container = document.getElementById('question-container');
+      container.innerHTML = `<h3>${q.prompt}</h3><div class="choices">${q.choices.map(choice => `<button onclick="checkAnswer('${choice}')">${choice}</button>`).join('')}</div>`;
+      document.getElementById('feedback').innerText = '';
+    }
+
+    function checkAnswer(selected) {
+      const q = questionBank[current];
+      total++;
+      if (q.answer.includes(selected)) {
+        correct++;
+        streak++;
+        document.getElementById('feedback').innerText = `✅ Correct! ${q.explanation}`;
+      } else {
+        streak = 0;
+        document.getElementById('feedback').innerText = `❌ Oops! Hint: ${q.hint}`;
+      }
+      updateProgress();
+    }
+
+    function updateProgress() {
+      document.getElementById('progress').innerText = `🔥 Streak: ${streak} • ✅ Correct: ${correct}/${total}`;
+    }
+
+    function nextQuestion() {
+      current = (current + 1) % questionBank.length;
+      loadQuestion();
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
