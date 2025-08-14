@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dora's Word Quest: Language Adventure!</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f0f8ff; color: #333; }
+        header { text-align: center; }
+        section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; background-color: white; border-radius: 10px; }
+        .qnum { cursor: help; font-weight: bold; }
+        .idk { margin-left: 10px; cursor: pointer; background-color: #ffd700; border: none; padding: 6px 10px; border-radius: 5px; }
+        .hint-btn { margin-left: 10px; cursor: pointer; background-color: #90ee90; border: none; padding: 6px 10px; border-radius: 5px; }
+        .answer-input { margin-left: 10px; width: 100px; padding: 5px; border-radius: 5px; }
+        .answer-input.textarea { width: 300px; height: 60px; }
+        .check-btn { margin-left: 10px; cursor: pointer; background-color: #add8e6; border: none; padding: 6px 10px; border-radius: 5px; }
+        .feedback { margin-left: 10px; color: green; display: none; font-weight: bold; }
+        .wrong { color: red; }
+        #progress-gems { font-weight: bold; }
+        .hint { display: none; background-color: #fffacd; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .fun-msg { color: #ff4500; font-weight: bold; }
+        .modal {
+            display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto;
+            background-color: rgba(0,0,0,0.4); justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe; margin: auto; padding: 20px; border: 1px solid #888; border-radius: 10px;
+            width: 80%; max-width: 500px; text-align: center; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+        }
+        .close-button {
+            color: #aaa; float: right; font-size: 28px; font-weight: bold;
+        }
+        .close-button:hover, .close-button:focus {
+            color: black; text-decoration: none; cursor: pointer;
+        }
+        #full-report-display {
+            background-color: #e0f2f7; border: 1px solid #a7d9ed; padding: 15px; margin-top: 20px;
+            border-radius: 8px; white-space: pre-wrap; font-family: monospace; font-size: 0.9em;
+            text-align: left; max-height: 300px; overflow-y: auto;
+        }
+        @media (max-width: 600px) {
+            #full-report-display { font-size: 0.8em; }
+            #practice-questions { max-height: 400px; overflow-y: auto; }
+            .answer-input.textarea { width: 100%; }
+        }
+        #progress-section button { margin: 5px; }
+    </style>
+</head>
+<body>
+    <header>
+        🦋 Dora's Word Quest: Language Adventure! 📚
+        <p>Hey Dora! You're the hero Story Island needs! Master English skills to save the day! Scroll down for concepts and practice problems. 🌟</p>
+    </header>
+
+    <nav>
+        <a href="#basics">Go to Language Basics 📖</a>
+        <a href="#practice">Go to Practice 💪</a>
+    </nav>
+
+    <section id="progress-section">
+        <h2>View Progress &amp; Report 📈</h2>
+        <h3>Your Adventure Log! ✨</h3>
+        <p>Total Word Gems: <span id="progress-gems">0</span></p>
+        <p>Adventure Level: <span id="adventure-level">Word Novice</span></p>
+        <p>Daily Check-in Streak: <span id="streak">0</span> 🔥</p>
+        <p>Mastery Badges: 📖</p>
+        <p>Areas to Re-Explore (Needed Hint/IDK): <span id="summary-hints-idk">None</span> 🚧</p>
+        <p>Areas to Re-Explore (Incorrect Attempts): <span id="summary-incorrect">None</span> 🚫</p>
+        <p>
+            <strong>Full Report Content (for Email):</strong>
+            <button onclick="submitReportViaEmail()">Submit Report via Email 📧</button>
+            <button onclick="copyReportToClipboard()">Copy Report to Clipboard 📋</button>
+            <button onclick="saveProgress()">Save Progress 💾</button>
+            <button onclick="resetProgress()">Reset Progress</button>
+        </p>
+        <pre id="full-report-display">Loading report...</pre>
+        <a href="#basics">Back to Lessons</a>
+    </section>
+
+    <section id="basics">
+        <h2>Dora's Study Corner! 📚</h2>
+        <p>Word Quest Basics: Hey Dora, English is like a treasure map for stories and ideas! Master these skills to unlock Story Island! 🎉</p>
+        <ul>
+            <li><strong>Parts of Speech</strong>: Nouns name things (e.g., kangaroo), verbs show actions (e.g., hop), adjectives describe (e.g., fluffy), adverbs modify verbs (e.g., swiftly).</li>
+            <li><strong>Sentences</strong>: Simple (one idea), compound (joined by 'and'), complex (main + dependent clause).</li>
+            <li><strong>Comprehension</strong>: Find main ideas and spot similes (e.g., "like dark pools").</li>
+        </ul>
+        <p>Example: In "The kangaroo hopped swiftly," 'kangaroo' is a noun, 'hopped' is a verb, 'swiftly' is an adverb. Try spotting these in our challenges! 😊</p>
+        <a href="#progress-section">Back to Progress</a>
+    </section>
+
+    <section id="practice">
+        <h2>Practice Challenges! 💪</h2>
+        <p>Dora, tackle these English problems to collect Word Gems! Each correct answer earns a gem. Get 10 to level up! 🚀</p>
+        <ol id="practice-questions">
+            <!-- Questions loaded dynamically -->
+        </ol>
+        <button onclick="submitReportViaEmail()">Share Report 📧</button>
+    </section>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p id="modal-message"></p>
+        </div>
+    </div>
+
+    <script>
+        let gems = 0;
+        const levels = ['Word Novice', 'Story Scribe', 'Language Legend', 'Epic Author'];
+        let currentLevel = 0;
+        let streak = 0;
+        const struggledQuestions = new Set();
+        const incorrectlyAnsweredQuestions = new Map();
+        const answeredQuestions = new Set();
+        let modalTimeoutId;
+
+        const modal = document.getElementById("myModal");
+        const span = document.getElementsByClassName("close-button")[0];
+        const modalMessage = document.getElementById("modal-message");
+        const fullReportDisplay = document.getElementById('full-report-display');
+
+        // All 30 questions from the worksheets
+        const allPotentialQuestions = [
+            // Worksheet 1: Parts of Speech (10 questions)
+            { id: 'initial1', displayHtml: `<span class="qnum">1.</span> Identify the noun in: “The kangaroo hopped swiftly.” <br>a) hopped b) swiftly c) kangaroo d) the <input class="answer-input" data-correct="c" type="text" placeholder="Enter letter" aria-label="Answer for question 1"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial1" aria-label="Show hint for question 1">Hint</button> <button class="idk" data-question="1. Identify the noun in: The kangaroo hopped swiftly.">I don't know</button><div id="hintInitial1" class="hint">A noun is a person, place, or thing. What’s the “thing” in this sentence?</div>`, isInitial: true },
+            { id: 'initial2', displayHtml: `<span class="qnum">2.</span> What is the verb in: “The eagle soared above the outback.” <br>a) eagle b) soared c) outback d) above <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question 2"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial2" aria-label="Show hint for question 2">Hint</button> <button class="idk" data-question="2. What is the verb in: The eagle soared above the outback.">I don't know</button><div id="hintInitial2" class="hint">A verb shows action or state. Look for the action word.</div>`, isInitial: true },
+            { id: 'initial3', displayHtml: `<span class="qnum">3.</span> Find the adjective in: “The fluffy koala climbed the gum tree.” <br>a) koala b) climbed c) fluffy d) tree <input class="answer-input" data-correct="c" type="text" placeholder="Enter letter" aria-label="Answer for question 3"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial3" aria-label="Show hint for question 3">Hint</button> <button class="idk" data-question="3. Find the adjective in: The fluffy koala climbed the gum tree.">I don't know</button><div id="hintInitial3" class="hint">An adjective describes a noun. Which word describes the koala?</div>`, isInitial: true },
+            { id: 'initial4', displayHtml: `<span class="qnum">4.</span> Identify the adverb in: “She sang loudly in the festival.” <br>a) sang b) loudly c) festival d) she <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question 4"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial4" aria-label="Show hint for question 4">Hint</button> <button class="idk" data-question="4. Identify the adverb in: She sang loudly in the festival.">I don't know</button><div id="hintInitial4" class="hint">An adverb describes how an action is done, often ending in -ly.</div>`, isInitial: true },
+            { id: 'initial5', displayHtml: `<span class="qnum">5.</span> What is the preposition in: “The dingo ran through the desert.” <br>a) dingo b) ran c) through d) desert <input class="answer-input" data-correct="c" type="text" placeholder="Enter letter" aria-label="Answer for question 5"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial5" aria-label="Show hint for question 5">Hint</button> <button class="idk" data-question="5. What is the preposition in: The dingo ran through the desert.">I don't know</button><div id="hintInitial5" class="hint">A preposition shows position or direction, like “in” or “through.”</div>`, isInitial: true },
+            { id: 'initial6', displayHtml: `<span class="qnum">6.</span> Circle all nouns in: “The wombat dug a deep burrow.” <input class="answer-input" data-correct="wombat, burrow" type="text" placeholder="List nouns" aria-label="Answer for question 6"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial6" aria-label="Show hint for question 6">Hint</button> <button class="idk" data-question="6. Circle all nouns in: The wombat dug a deep burrow.">I don't know</button><div id="hintInitial6" class="hint">List all words that name people, places, or things.</div>`, isInitial: true },
+            { id: 'initial7', displayHtml: `<span class="qnum">7.</span> Underline the verb in: “The didgeridoo echoed across the valley.” <input class="answer-input" data-correct="echoed" type="text" placeholder="Enter verb" aria-label="Answer for question 7"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintInitial7" aria-label="Show hint for question 7">Hint</button> <button class="idk" data-question="7. Underline the verb in: The didgeridoo echoed across the valley.">I don't know</button><div id="hintInitial7" class="hint">Find the word showing the action.</div>`, isInitial: true },
+            { id: 'D1', displayHtml: `<span class="qnum">P1.</span> Write an adjective to describe a “beach” in: “The ____ beach sparkled under the sun.” <input class="answer-input" data-correct="sandy" type="text" placeholder="Enter adjective" aria-label="Answer for question P1"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD1" aria-label="Show hint for question P1">Hint</button> <button class="idk" data-question="P1. Write an adjective to describe a beach in: The ____ beach sparkled under the sun.">I don't know</button><div id="hintD1" class="hint">Think of a word that describes how the beach looks, like “sandy” or “golden.”</div>` },
+            { id: 'D2', displayHtml: `<span class="qnum">P2.</span> Identify the adverb in: “The surfer rode the wave confidently.” <br>a) surfer b) rode c) wave d) confidently <input class="answer-input" data-correct="d" type="text" placeholder="Enter letter" aria-label="Answer for question P2"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD2" aria-label="Show hint for question P2">Hint</button> <button class="idk" data-question="P2. Identify the adverb in: The surfer rode the wave confidently.">I don't know</button><div id="hintD2" class="hint">Look for a word that tells how the surfer rode.</div>` },
+            { id: 'D3', displayHtml: `<span class="qnum">P3.</span> Write a sentence about a platypus using a noun, verb, and adjective. <textarea class="answer-input textarea" data-correct="platypus" aria-label="Answer for question P3"></textarea><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD3" aria-label="Show hint for question P3">Hint</button> <button class="idk" data-question="P3. Write a sentence about a platypus using a noun, verb, and adjective.">I don't know</button><div id="hintD3" class="hint">Example: “The cute platypus swam gracefully.”</div>` },
+            // Worksheet 2: Sentence Structure (10 questions)
+            { id: 'D4', displayHtml: `<span class="qnum">S1.</span> Correct the sentence: “i run to the park” <input class="answer-input" data-correct="I run to the park." type="text" aria-label="Answer for question S1"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD4" aria-label="Show hint for question S1">Hint</button> <button class="idk" data-question="S1. Correct the sentence: i run to the park">I don't know</button><div id="hintD4" class="hint">Start with a capital letter and end with a period.</div>` },
+            { id: 'D5', displayHtml: `<span class="qnum">S2.</span> Add punctuation: “Where is my boomerang” <br>a) ? b) ! c) . <input class="answer-input" data-correct="a" type="text" placeholder="Enter letter" aria-label="Answer for question S2"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD5" aria-label="Show hint for question S2">Hint</button> <button class="idk" data-question="S2. Add punctuation: Where is my boomerang">I don't know</button><div id="hintD5" class="hint">Questions end with a question mark.</div>` },
+            { id: 'D6', displayHtml: `<span class="qnum">S3.</span> Combine into a compound sentence: “The koala slept. The eucalyptus leaves rustled.” <input class="answer-input" data-correct="The koala slept, and the eucalyptus leaves rustled." type="text" aria-label="Answer for question S3"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD6" aria-label="Show hint for question S3">Hint</button> <button class="idk" data-question="S3. Combine into a compound sentence: The koala slept. The eucalyptus leaves rustled.">I don't know</button><div id="hintD6" class="hint">Use “and” or “but” to join the sentences.</div>` },
+            { id: 'D7', displayHtml: `<span class="qnum">S4.</span> Correct the sentence: “the sun shine brightly” <input class="answer-input" data-correct="The sun shines brightly." type="text" aria-label="Answer for question S4"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD7" aria-label="Show hint for question S4">Hint</button> <button class="idk" data-question="S4. Correct the sentence: the sun shine brightly">I don't know</button><div id="hintD7" class="hint">Check the capital letter and verb form.</div>` },
+            { id: 'D8', displayHtml: `<span class="qnum">S5.</span> Identify the sentence type: “Although it rained, we hiked in the Blue Mountains.” <br>a) Simple b) Compound c) Complex <input class="answer-input" data-correct="c" type="text" placeholder="Enter letter" aria-label="Answer for question S5"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD8" aria-label="Show hint for question S5">Hint</button> <button class="idk" data-question="S5. Identify the sentence type: Although it rained, we hiked in the Blue Mountains.">I don't know</button><div id="hintD8" class="hint">Complex sentences have a main clause and a dependent clause (e.g., starting with “although”).</div>` },
+            { id: 'D9', displayHtml: `<span class="qnum">S6.</span> Add a comma: “I saw a kangaroo a wallaby and a wombat.” <input class="answer-input" data-correct="I saw a kangaroo, a wallaby, and a wombat." type="text" aria-label="Answer for question S6"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD9" aria-label="Show hint for question S6">Hint</button> <button class="idk" data-question="S6. Add a comma: I saw a kangaroo a wallaby and a wombat.">I don't know</button><div id="hintD9" class="hint">Use commas to separate items in a list.</div>` },
+            { id: 'D10', displayHtml: `<span class="qnum">S7.</span> Write a simple sentence about a beach. <textarea class="answer-input textarea" data-correct="beach" aria-label="Answer for question S7"></textarea><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD10" aria-label="Show hint for question S7">Hint</button> <button class="idk" data-question="S7. Write a simple sentence about a beach.">I don't know</button><div id="hintD10" class="hint">A simple sentence has one main idea, e.g., “The beach sparkled.”</div>` },
+            { id: 'D11', displayHtml: `<span class="qnum">S8.</span> Correct the sentence: “she dance with joy” <input class="answer-input" data-correct="She dances with joy." type="text" aria-label="Answer for question S8"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD11" aria-label="Show hint for question S8">Hint</button> <button class="idk" data-question="S8. Correct the sentence: she dance with joy">I don't know</button><div id="hintD11" class="hint">Check capitalization and verb agreement.</div>` },
+            { id: 'D12', displayHtml: `<span class="qnum">S9.</span> Combine into a complex sentence: “The festival was fun. It ended late.” <input class="answer-input" data-correct="The festival was fun because it ended late." type="text" aria-label="Answer for question S9"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD12" aria-label="Show hint for question S9">Hint</button> <button class="idk" data-question="S9. Combine into a complex sentence: The festival was fun. It ended late.">I don't know</button><div id="hintD12" class="hint">Use a word like “because” or “since” to connect ideas.</div>` },
+            { id: 'D13', displayHtml: `<span class="qnum">S10.</span> Add punctuation: “Wow what a great surf” <input class="answer-input" data-correct="Wow, what a great surf!" type="text" aria-label="Answer for question S10"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD13" aria-label="Show hint for question S10">Hint</button> <button class="idk" data-question="S10. Add punctuation: Wow what a great surf">I don't know</button><div id="hintD13" class="hint">Exclamations need an exclamation mark.</div>` },
+            // Worksheet 3: Comprehension (10 questions)
+            { id: 'D14', displayHtml: `<span class="qnum">C1.</span> Read: “The outback sun burned fiercely, casting shadows like dark pools across the red sand.” What is the main idea? <br>a) The sand is red b) The sun is hot c) The shadows are long <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question C1"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD14" aria-label="Show hint for question C1">Hint</button> <button class="idk" data-question="C1. What is the main idea of: The outback sun burned fiercely, casting shadows like dark pools across the red sand.">I don't know</button><div id="hintD14" class="hint">The main idea is what the sentence is mostly about. Focus on the sun.</div>` },
+            { id: 'D15', displayHtml: `<span class="qnum">C2.</span> In the same sentence, what is the simile? <br>a) burned fiercely b) like dark pools c) red sand <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question C2"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD15" aria-label="Show hint for question C2">Hint</button> <button class="idk" data-question="C2. In: The outback sun burned fiercely, casting shadows like dark pools across the red sand. What is the simile?">I don't know</button><div id="hintD15" class="hint">A simile uses “like” or “as” to compare things.</div>` },
+            { id: 'D16', displayHtml: `<span class="qnum">C3.</span> What does “fiercely” suggest about the sun? <input class="answer-input" data-correct="hot" type="text" placeholder="Enter answer" aria-label="Answer for question C3"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD16" aria-label="Show hint for question C3">Hint</button> <button class="idk" data-question="C3. What does fiercely suggest about the sun in: The outback sun burned fiercely, casting shadows like dark pools across the red sand.">I don't know</button><div id="hintD16" class="hint">Think about how “fiercely” describes the sun’s action.</div>` },
+            { id: 'D17', displayHtml: `<span class="qnum">C4.</span> Read: “The didgeridoo echoed through the valley, telling stories of ancient times.” What is the verb? <br>a) didgeridoo b) echoed c) valley <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question C4"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD17" aria-label="Show hint for question C4">Hint</button> <button class="idk" data-question="C4. What is the verb in: The didgeridoo echoed through the valley, telling stories of ancient times.">I don't know</button><div id="hintD17" class="hint">The verb shows the action. What is the didgeridoo doing?</div>` },
+            { id: 'D18', displayHtml: `<span class="qnum">C5.</span> In the same sentence, what does the sentence suggest about the didgeridoo’s sound? <input class="answer-input" data-correct="loud" type="text" placeholder="Enter answer" aria-label="Answer for question C5"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD18" aria-label="Show hint for question C5">Hint</button> <button class="idk" data-question="C5. What does the sentence suggest about the didgeridoo’s sound in: The didgeridoo echoed through the valley, telling stories of ancient times.">I don't know</button><div id="hintD18" class="hint">Think about “echoed” and “ancient times.”</div>` },
+            { id: 'D19', displayHtml: `<span class="qnum">C6.</span> Write a simile to describe the didgeridoo’s sound. <textarea class="answer-input textarea" data-correct="like" aria-label="Answer for question C6"></textarea><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD19" aria-label="Show hint for question C6">Hint</button> <button class="idk" data-question="C6. Write a simile to describe the didgeridoo’s sound.">I don't know</button><div id="hintD19" class="hint">Example: “The sound was like a deep hum.”</div>` },
+            { id: 'D20', displayHtml: `<span class="qnum">C7.</span> Read: “The Great Barrier Reef sparkled under the turquoise waves, hiding a world of colorful coral.” What is the adjective describing the waves? <br>a) sparkled b) turquoise c) coral <input class="answer-input" data-correct="b" type="text" placeholder="Enter letter" aria-label="Answer for question C7"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD20" aria-label="Show hint for question C7">Hint</button> <button class="idk" data-question="C7. What is the adjective describing the waves in: The Great Barrier Reef sparkled under the turquoise waves, hiding a world of colorful coral.">I don't know</button><div id="hintD20" class="hint">An adjective describes a noun. Which word describes “waves”?</div>` },
+            { id: 'D21', displayHtml: `<span class="qnum">C8.</span> In the same sentence, what is the main idea? <br>a) The coral is colorful b) The reef is hidden c) The reef is beautiful <input class="answer-input" data-correct="c" type="text" placeholder="Enter letter" aria-label="Answer for question C8"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD21" aria-label="Show hint for question C8">Hint</button> <button class="idk" data-question="C8. What is the main idea of: The Great Barrier Reef sparkled under the turquoise waves, hiding a world of colorful coral.">I don't know</button><div id="hintD21" class="hint">Focus on what the sentence emphasizes about the reef.</div>` },
+            { id: 'D22', displayHtml: `<span class="qnum">C9.</span> Infer: Why might the coral be described as a “world”? <input class="answer-input" data-correct="diverse" type="text" placeholder="Enter answer" aria-label="Answer for question C9"><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD22" aria-label="Show hint for question C9">Hint</button> <button class="idk" data-question="C9. Why might the coral be described as a world in: The Great Barrier Reef sparkled under the turquoise waves, hiding a world of colorful coral.">I don't know</button><div id="hintD22" class="hint">Think about what “world” suggests about the coral’s size or diversity.</div>` },
+            { id: 'D23', displayHtml: `<span class="qnum">C10.</span> Write a sentence describing the Great Barrier Reef using a metaphor. <textarea class="answer-input textarea" data-correct="is" aria-label="Answer for question C10"></textarea><button class="check-btn">Check</button><span class="feedback"></span> <button class="hint-btn" data-hint="hintD23" aria-label="Show hint for question C10">Hint</button> <button class="idk" data-question="C10. Write a sentence describing the Great Barrier Reef using a metaphor.">I don't know</button><div id="hintD23" class="hint">A metaphor directly compares without “like” or “as,” e.g., “The reef is a rainbow of life.”</div>` }
+        ];
+
+        let initialQuestions = [];
+        let dynamicQuestionsPool = [];
+
+        function initializeQuestions() {
+            initialQuestions = allPotentialQuestions.filter(q => q.isInitial);
+            dynamicQuestionsPool = allPotentialQuestions.filter(q => !q.isInitial);
+
+            const practiceQuestionsOl = document.getElementById('practice-questions');
+            practiceQuestionsOl.innerHTML = '';
+
+            initialQuestions.forEach((q, index) => {
+                const newLi = document.createElement('li');
+                newLi.innerHTML = q.displayHtml;
+                newLi.value = parseInt(q.id.replace('initial', ''));
+                practiceQuestionsOl.appendChild(newLi);
+                attachEventListenersToNewQuestion(newLi);
+            });
+
+            // Restore answered questions
+            answeredQuestions.forEach(qId => {
+                const question = allPotentialQuestions.find(q => q.id === qId);
+                if (question && !question.isInitial) {
+                    const newLi = document.createElement('li');
+                    newLi.innerHTML = question.displayHtml;
+                    newLi.value = practiceQuestionsOl.children.length + 1;
+                    practiceQuestionsOl.appendChild(newLi);
+                    attachEventListenersToNewQuestion(newLi);
+                }
+            });
+        }
+
+        function attachEventListenersToNewQuestion(newLi) {
+            const checkBtn = newLi.querySelector('.check-btn');
+            const hintBtn = newLi.querySelector('.hint-btn');
+            const idkBtn = newLi.querySelector('.idk');
+            const answerInput = newLi.querySelector('.answer-input');
+
+            if (checkBtn) {
+                checkBtn.addEventListener('click', () => {
+                    checkAnswer(answerInput, checkBtn);
+                });
+            }
+            if (hintBtn) {
+                hintBtn.addEventListener('click', () => {
+                    const hintId = hintBtn.dataset.hint;
+                    const hintDiv = document.getElementById(hintId);
+                    if (hintDiv) {
+                        hintDiv.style.display = hintDiv.style.display === 'block' ? 'none' : 'block';
+                    }
+                    const questionText = getQuestionString(hintBtn);
+                    struggledQuestions.add(questionText);
+                    addNewQuestion();
+                    showModal("New challenge added for extra practice!");
+                    saveProgress();
+                });
+            }
+            if (idkBtn) {
+                idkBtn.addEventListener('click', () => {
+                    const q = idkBtn.dataset.question;
+                    const prompt = `Explain ${q} for a Year 7 student, step by step, like teaching a 13-year-old.`;
+                    copyToClipboard(prompt);
+                    struggledQuestions.add(q);
+                    addNewQuestion();
+                    showModal("New challenge added for extra practice!");
+                    saveProgress();
+                });
+            }
+            if (answerInput) {
+                answerInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const inputElement = e.target;
+                        const btn = inputElement.nextElementSibling;
+                        checkAnswer(inputElement, btn);
+                    }
+                });
+            }
+        }
+
+        function addNewQuestion() {
+            if (dynamicQuestionsPool.length === 0) {
+                showModal("No more extra questions to add.");
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * dynamicQuestionsPool.length);
+            const questionToAdd = dynamicQuestionsPool.splice(randomIndex, 1)[0];
+
+            const practiceQuestionsOl = document.getElementById('practice-questions');
+            const newLi = document.createElement('li');
+            newLi.innerHTML = questionToAdd.displayHtml;
+            newLi.value = practiceQuestionsOl.children.length + 1;
+            practiceQuestionsOl.appendChild(newLi);
+
+            answeredQuestions.add(questionToAdd.id);
+            attachEventListenersToNewQuestion(newLi);
+            saveProgress();
+        }
+
+        function showModal(message) {
+            clearTimeout(modalTimeoutId);
+            modalMessage.textContent = message;
+            modal.style.display = "flex";
+            modalTimeoutId = setTimeout(() => {
+                modal.style.display = "none";
+            }, 2000);
+        }
+
+        span.onclick = function() {
+            clearTimeout(modalTimeoutId);
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                clearTimeout(modalTimeoutId);
+                modal.style.display = "none";
+            }
+        }
+
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showModal('Copied to clipboard!');
+            } catch (err) {
+                showModal('Failed to copy: ' + err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function getQuestionString(element) {
+            const closestLi = element.closest('li');
+            if (!closestLi) return 'Unknown Question';
+            const idkButton = closestLi.querySelector('.idk');
+            if (idkButton && idkButton.dataset.question) {
+                return idkButton.dataset.question;
+            }
+            const qnumSpan = closestLi.querySelector('.qnum');
+            let questionIdentifier = qnumSpan ? qnumSpan.textContent.trim() : '';
+            let textContent = Array.from(closestLi.childNodes)
+                .filter(node => node.nodeType === Node.TEXT_NODE || (node.nodeName !== 'INPUT' && node.nodeName !== 'BUTTON' && node.nodeName !== 'SPAN' && node.nodeName !== 'DIV' && node.nodeName !== 'TEXTAREA'))
+                .map(node => node.textContent)
+                .join(' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            textContent = textContent.replace(/a\.\s+.*?\s+b\.\s+.*?\s+c\.\s+.*?\s+d\.\s+.*?(\s|$)/, '').trim();
+            return `${questionIdentifier} ${textContent}`.trim();
+        }
+
+        function checkAnswer(input, btn) {
+            const feedback = btn.nextElementSibling;
+            let userAnswer = input.value.trim().toLowerCase();
+            let correct = String(input.dataset.correct).toLowerCase();
+            let isCorrect = false;
+
+            if (input.tagName === 'TEXTAREA') {
+                if (userAnswer.includes(correct)) {
+                    isCorrect = true;
+                }
+            } else {
+                if (userAnswer === correct || userAnswer === correct.replace(/[^a-z]/g, '')) {
+                    isCorrect = true;
+                }
+            }
+
+            const questionText = getQuestionString(input);
+            if (isCorrect) {
+                feedback.textContent = 'Awesome, Dora! You nailed it! 🎉';
+                feedback.classList.remove('wrong');
+                if (!input.dataset.checked) {
+                    updateGems();
+                    input.dataset.checked = true;
+                    answeredQuestions.add(input.closest('li').querySelector('.idk').dataset.question);
+                }
+                if (incorrectlyAnsweredQuestions.has(questionText)) {
+                    incorrectlyAnsweredQuestions.delete(questionText);
+                }
+            } else {
+                feedback.textContent = `Oops, you entered "${input.value}". Try again! 💫`;
+                feedback.classList.add('wrong');
+                incorrectlyAnsweredQuestions.set(questionText, {
+                    wrongAnswer: input.value.trim(),
+                    correctAnswer: input.dataset.correct
+                });
+            }
+            feedback.style.display = 'inline';
+            updateAreasToReExploreDisplay();
+            saveProgress();
+        }
+
+        function updateGems() {
+            gems++;
+            document.getElementById('progress-gems').textContent = gems;
+            if (gems % 10 === 0 && currentLevel < levels.length - 1) {
+                currentLevel++;
+                document.getElementById('adventure-level').textContent = levels[currentLevel];
+                showModal(`Woo-hoo! Level up to ${levels[currentLevel]}! You're a language superstar, Dora! 🚀`);
+            }
+            updateAreasToReExploreDisplay();
+            saveProgress();
+        }
+
+        function updateStreak() {
+            const today = new Date().toDateString();
+            const lastVisit = localStorage.getItem('lastVisit');
+            streak = parseInt(localStorage.getItem('streak') || '0');
+            if (lastVisit !== today) {
+                streak++;
+                localStorage.setItem('streak', streak);
+                localStorage.setItem('lastVisit', today);
+            }
+            document.getElementById('streak').textContent = streak;
+            return streak;
+        }
+
+        function saveProgress() {
+            const progress = {
+                gems: gems,
+                currentLevel: currentLevel,
+                streak: streak,
+                struggledQuestions: Array.from(struggledQuestions),
+                incorrectlyAnsweredQuestions: Object.fromEntries(incorrectlyAnsweredQuestions),
+                answeredQuestions: Array.from(answeredQuestions)
+            };
+            localStorage.setItem('wordQuestProgress', JSON.stringify(progress));
+            showModal('Progress saved! 💾');
+        }
+
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('wordQuestProgress');
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                gems = progress.gems || 0;
+                currentLevel = progress.currentLevel || 0;
+                streak = progress.streak || 0;
+                struggledQuestions.clear();
+                progress.struggledQuestions.forEach(q => struggledQuestions.add(q));
+                incorrectlyAnsweredQuestions.clear();
+                Object.entries(progress.incorrectlyAnsweredQuestions).forEach(([q, details]) => incorrectlyAnsweredQuestions.set(q, details));
+                answeredQuestions.clear();
+                progress.answeredQuestions.forEach(q => answeredQuestions.add(q));
+                document.getElementById('progress-gems').textContent = gems;
+                document.getElementById('adventure-level').textContent = levels[currentLevel];
+                document.getElementById('streak').textContent = streak;
+                updateAreasToReExploreDisplay();
+            }
+        }
+
+        function resetProgress() {
+            gems = 0;
+            currentLevel = 0;
+            streak = 0;
+            struggledQuestions.clear();
+            incorrectlyAnsweredQuestions.clear();
+            answeredQuestions.clear();
+            localStorage.removeItem('wordQuestProgress');
+            localStorage.removeItem('streak');
+            localStorage.removeItem('lastVisit');
+            document.getElementById('progress-gems').textContent = gems;
+            document.getElementById('adventure-level').textContent = levels[0];
+            document.getElementById('streak').textContent = streak;
+            document.querySelectorAll('.feedback').forEach(f => f.style.display = 'none');
+            document.querySelectorAll('.answer-input').forEach(i => {
+                i.value = '';
+                delete i.dataset.checked;
+            });
+            document.querySelectorAll('.hint').forEach(h => h.style.display = 'none');
+            initializeQuestions();
+            updateAreasToReExploreDisplay();
+            showModal('Progress reset! Start fresh, Dora! 🌟');
+        }
+
+        function generateReportContent() {
+            const struggledList = struggledQuestions.size > 0 ? Array.from(struggledQuestions).slice(0, 10).join('; ') + (struggledQuestions.size > 10 ? `; and ${struggledQuestions.size - 10} more` : '') : 'None';
+            let incorrectAnswersReport = '';
+            if (incorrectlyAnsweredQuestions.size > 0) {
+                incorrectAnswersReport += '\n\nQuestions with Incorrect Attempts:\n';
+                incorrectlyAnsweredQuestions.forEach((details, question) => {
+                    incorrectAnswersReport += `- Question: ${question}\n  Your Answer: ${details.wrongAnswer}\n  Correct Answer: ${details.correctAnswer}\n`;
+                });
+            }
+            return `Total Word Gems: ${gems}\nAdventure Level: ${levels[currentLevel]}\nDaily Check-in Streak: ${updateStreak()}\nMastery Badges: 📖\nAreas to Re-Explore (needed hint or "I don't know"): ${struggledList}${incorrectAnswersReport}`;
+        }
+
+        function submitReportViaEmail() {
+            const report = generateReportContent().replace(/[🦋🚀🎉📖]/g, '');
+            window.location.href = `mailto:teacher@example.com?subject=Dora's Language Report&body=${encodeURIComponent(report)}`;
+        }
+
+        function copyReportToClipboard() {
+            const report = generateReportContent().replace(/[🦋🚀🎉📖]/g, '');
+            copyToClipboard(report);
+        }
+
+        function updateAreasToReExploreDisplay() {
+            const struggledHints = struggledQuestions.size > 0 ? Array.from(struggledQuestions).slice(0, 10).join('; ') + (struggledQuestions.size > 10 ? `; and ${struggledQuestions.size - 10} more` : '') : 'None';
+            const incorrectAttemptsSummary = incorrectlyAnsweredQuestions.size > 0 ? `${incorrectlyAnsweredQuestions.size} questions` : 'None';
+            document.getElementById('summary-hints-idk').textContent = struggledHints;
+            document.getElementById('summary-incorrect').textContent = incorrectAttemptsSummary;
+            fullReportDisplay.textContent = generateReportContent();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            initializeQuestions();
+            updateAreasToReExploreDisplay();
+            updateStreak();
+        });
+
+        const originalAddStruggled = struggledQuestions.add;
+        struggledQuestions.add = function(item) {
+            originalAddStruggled.apply(this, arguments);
+            updateAreasToReExploreDisplay();
+            saveProgress();
+        };
+        const originalClearStruggled = struggledQuestions.clear;
+        struggledQuestions.clear = function() {
+            originalClearStruggled.apply(this, arguments);
+            updateAreasToReExploreDisplay();
+            saveProgress();
+        };
+    </script>
+</body>
+</html>
