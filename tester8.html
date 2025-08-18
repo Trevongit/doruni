@@ -1,0 +1,663 @@
+GitHub Copilot Chat Assistant — patched tester7.html follows. Copy and paste the entire file into tester7.html.
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dora's Word Quest — tester7</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 18px; background:#f0f8ff; color:#222; }
+    header { text-align:center; margin-bottom:12px; }
+    section { margin-bottom:18px; padding:14px; background:#fff; border:1px solid #d0d7dc; border-radius:10px; }
+    .qnum { font-weight:bold; cursor:help; }
+    .idk, .hint-btn, .check-btn, button[type="button"] { cursor:pointer; border-radius:6px; padding:6px 10px; border:none; }
+    .idk { background:#ffd700; margin-left:8px; }
+    .hint-btn { background:#90ee90; margin-left:8px; }
+    .check-btn { background:#add8e6; margin-left:8px; }
+    .answer-input { margin-top:6px; padding:6px; border-radius:6px; border:1px solid #c4d0d6; width:220px; }
+    .answer-input.textarea { display:block; width:100%; min-height:64px; }
+    .feedback { margin-left:8px; font-weight:bold; display:inline-block; }
+    .feedback.wrong { color:#c00; }
+    .feedback.right { color:#0a6; }
+    .hint { display:none; background:#fffacd; padding:8px; margin-top:8px; border-radius:6px; border:1px solid #e0d89a; }
+    #full-report-display { background:#e9f6fb; padding:12px; border-radius:8px; font-family:monospace; white-space:pre-wrap; max-height:300px; overflow:auto; }
+    .modal { display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; }
+    .modal[aria-hidden="false"] { display:flex; }
+    .modal-content { background:#fff; padding:18px; border-radius:10px; max-width:520px; width:90%; box-shadow:0 6px 22px rgba(0,0,0,0.2); position:relative; }
+    .close-button { position:absolute; right:10px; top:6px; font-size:20px; background:transparent; border:none; cursor:pointer; }
+    @media (max-width:600px) {
+      .answer-input { width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    🦋 Dora's Word Quest: Language Adventure! 📚
+    <p>Practice and collect Word Gems — get 10 gems to level up!</p>
+  </header>
+
+  <section id="progress">
+    <h2>Progress & Report</h2>
+    <p>Total Word Gems: <strong id="progress-gems">0</strong></p>
+    <p>Adventure Level: <strong id="adventure-level">Word Novice</strong></p>
+    <p>Daily Check-in Streak: <strong id="streak">0</strong></p>
+    <p>Areas to Re-Explore (hint / I don't know): <span id="summary-hints-idk">None</span></p>
+    <p>Areas with incorrect attempts: <span id="summary-incorrect">None</span></p>
+    <p>
+      <button id="email-report-btn" type="button" style="background:#add8e6;">Submit Report via Email</button>
+      <button id="copy-report-btn" type="button" style="background:#ffd700;">Copy Report to Clipboard</button>
+      <button id="reset-progress-btn" type="button" style="background:#f5a623;">Reset Progress</button>
+    </p>
+    <div id="full-report-display">Loading report...</div>
+  </section>
+
+  <section id="basics">
+    <h2>Dora's Study Corner</h2>
+    <p>Parts of speech, sentence structure, vocabulary, and reading comprehension — practice here!</p>
+    <a href="#practice">Go to Practice</a>
+  </section>
+
+  <section id="practice">
+    <h2>Practice Challenges</h2>
+    <p>Answer the questions below. Type a letter (a, b, c, d) or the answer text where required. Use the hint or "I don't know" to add extra practice items.</p>
+    <ol id="practice-questions"></ol>
+    <p><button id="share-report-bottom" type="button" style="background:#add8e6;">Share Report</button></p>
+  </section>
+
+  <div id="myModal" class="modal" role="dialog" aria-hidden="true" aria-modal="true">
+    <div class="modal-content">
+      <button class="close-button" aria-label="Close" type="button">&times;</button>
+      <div id="modal-message" role="status" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <script>
+    // Identify: GitHub Copilot Chat Assistant
+    (function(){
+      // State
+      let gems = 0;
+      const levels = ['Word Novice', 'Story Scribe', 'Language Legend', 'Epic Author'];
+      let currentLevel = 0;
+      const struggledQuestions = new Set();
+      const incorrectlyAnsweredQuestions = new Map();
+
+      // DOM refs
+      const practiceQuestionsOl = document.getElementById('practice-questions');
+      const fullReportDisplay = document.getElementById('full-report-display');
+      const modal = document.getElementById('myModal');
+      const modalMessage = document.getElementById('modal-message');
+      const modalClose = modal.querySelector('.close-button');
+
+      // Modal helpers
+      let modalTimeout = null;
+      function showModal(message, ms = 1800) {
+        clearTimeout(modalTimeout);
+        modalMessage.textContent = message;
+        modal.setAttribute('aria-hidden', 'false');
+        modal.style.display = 'flex';
+        modalTimeout = setTimeout(() => {
+          modal.setAttribute('aria-hidden', 'true');
+          modal.style.display = 'none';
+        }, ms);
+      }
+      modalClose.addEventListener('click', () => {
+        clearTimeout(modalTimeout);
+        modal.setAttribute('aria-hidden', 'true');
+        modal.style.display = 'none';
+      });
+      window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          clearTimeout(modalTimeout);
+          modal.setAttribute('aria-hidden', 'true');
+          modal.style.display = 'none';
+        }
+      });
+
+      // Clipboard helper: modern + fallback
+      async function copyToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          try {
+            await navigator.clipboard.writeText(text);
+            showModal('Report copied to clipboard!');
+            return true;
+          } catch (e) {
+            // fallback to legacy
+          }
+        }
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          showModal('Report copied to clipboard!');
+          document.body.removeChild(ta);
+          return true;
+        } catch (err) {
+          document.body.removeChild(ta);
+          showModal('Copy failed: ' + String(err));
+          return false;
+        }
+      }
+
+      // Robust question text extractor (for reports)
+      function getQuestionString(el) {
+        const li = el.closest('li');
+        if (!li) return 'Unknown question';
+        // If there's an idk button with data-question, prefer that
+        const idk = li.querySelector('.idk[data-question]');
+        if (idk && idk.dataset.question) return idk.dataset.question;
+        // Clone and remove interactive parts to extract visible text
+        const clone = li.cloneNode(true);
+        clone.querySelectorAll('input, textarea, button, .feedback, .hint').forEach(n => n.remove());
+        let text = clone.textContent || '';
+        text = text.replace(/\s+/g, ' ').trim();
+        return text;
+      }
+
+      // Update UI summaries/report
+      function updateAreasToReExploreDisplay() {
+        document.getElementById('summary-hints-idk').textContent = struggledQuestions.size > 0 ? Array.from(struggledQuestions).slice(0,10).join('; ') : 'None';
+        document.getElementById('summary-incorrect').textContent = incorrectlyAnsweredQuestions.size > 0 ? `${incorrectlyAnsweredQuestions.size} questions` : 'None';
+        fullReportDisplay.textContent = generateReportContent();
+      }
+
+      function updateGems() {
+        gems++;
+        document.getElementById('progress-gems').textContent = gems;
+        // persist
+        localStorage.setItem('dora_gems', String(gems));
+        if (gems % 10 === 0 && currentLevel < levels.length - 1) {
+          currentLevel++;
+          document.getElementById('adventure-level').textContent = levels[currentLevel];
+          showModal(`Level up! ${levels[currentLevel]} 🎉`);
+          localStorage.setItem('dora_level', String(currentLevel));
+        }
+        updateAreasToReExploreDisplay();
+      }
+
+      function generateReportContent() {
+        const struggledList = struggledQuestions.size ? Array.from(struggledQuestions).slice(0,20).join('; ') : 'None';
+        let incorrectReport = '';
+        if (incorrectlyAnsweredQuestions.size > 0) {
+          incorrectReport += '\nQuestions with Incorrect Attempts:\n';
+          incorrectlyAnsweredQuestions.forEach((details, question) => {
+            incorrectReport += `- Question: ${question}\n  Your Answer: ${details.wrongAnswer}\n  Correct Answer: ${details.correctAnswer}\n`;
+          });
+        } else {
+          incorrectReport += '\nQuestions with Incorrect Attempts: None\n';
+        }
+
+        return `Total Word Gems: ${gems}
+Adventure Level: ${levels[currentLevel]}
+Daily Check-in Streak: ${updateStreak()}
+Areas to Re-Explore (hint/IDK): ${struggledList}
+Areas with incorrect attempts: ${incorrectlyAnsweredQuestions.size}
+${incorrectReport}
+Report generated: ${new Date().toLocaleString()}
+`;
+      }
+
+      function submitReportViaEmail() {
+        const report = generateReportContent().replace(/[🦋🚀🎉📖]/g, '');
+        const subject = encodeURIComponent("Dora's Language Report");
+        const body = encodeURIComponent(report);
+        // opens user's mail client; teacher address as suggestion
+        window.location.href = `mailto:teacher@example.com?subject=${subject}&body=${body}`;
+      }
+
+      function copyReportToClipboardHandler() {
+        const report = generateReportContent().replace(/[🦋🚀🎉📖]/g, '');
+        copyToClipboard(report);
+      }
+
+      function resetProgress() {
+        gems = 0;
+        currentLevel = 0;
+        localStorage.removeItem('dora_gems');
+        localStorage.removeItem('dora_level');
+        struggledQuestions.clear();
+        incorrectlyAnsweredQuestions.clear();
+        document.getElementById('progress-gems').textContent = gems;
+        document.getElementById('adventure-level').textContent = levels[0];
+        // reset UI states
+        document.querySelectorAll('.feedback').forEach(f => f.style.display = 'none');
+        document.querySelectorAll('.answer-input').forEach(i => { i.value = ''; delete i.dataset.checked; i.disabled = false; });
+        document.querySelectorAll('.hint').forEach(h => h.style.display = 'none');
+        initializeQuestions(); // reload initial questions
+        updateAreasToReExploreDisplay();
+        showModal('Progress reset.');
+      }
+
+      // Answer checking: disable input + check button after correct (prevents double-count)
+      function checkAnswer(inputEl, checkBtn) {
+        if (!inputEl || !checkBtn) return;
+        const li = inputEl.closest('li');
+        const feedback = li.querySelector('.feedback');
+        const userRaw = (inputEl.value || '').trim();
+        const user = userRaw.toLowerCase();
+        const correctRaw = (inputEl.dataset.correct || '').toString();
+        const correct = correctRaw.trim().toLowerCase();
+        let isCorrect = false;
+
+        if (inputEl.tagName === 'TEXTAREA') {
+          if (correct && user.includes(correct)) isCorrect = true;
+        } else {
+          // accept exact text or single letter (a,b,c,d) that matches correct letter
+          if (user === correct) isCorrect = true;
+          // if correct is a letter like "c", also accept input like "c." or "c. loudly" or "c loudly"
+          if (!isCorrect && /^[a-d]$/.test(correct) && user.match(/^[a-d]\.?(\s+.*)?$/)) {
+            if (user[0] === correct[0]) isCorrect = true;
+          }
+          // also accept if user typed full answer text equal to correct
+          if (!isCorrect && correct.length > 1 && user === correct) isCorrect = true;
+        }
+
+        const questionText = getQuestionString(inputEl);
+
+        if (isCorrect) {
+          feedback.textContent = 'Correct! 🎉';
+          feedback.classList.remove('wrong');
+          feedback.classList.add('right');
+          feedback.style.display = 'inline-block';
+          if (!inputEl.dataset.checked) {
+            updateGems();
+            inputEl.dataset.checked = 'true';
+          }
+          // disable to prevent double counting
+          inputEl.disabled = true;
+          checkBtn.disabled = true;
+          // if previously incorrectly attempted, remove from map
+          if (incorrectlyAnsweredQuestions.has(questionText)) {
+            incorrectlyAnsweredQuestions.delete(questionText);
+          }
+        } else {
+          feedback.textContent = `Not quite — you entered "${userRaw}". Try again.`;
+          feedback.classList.remove('right');
+          feedback.classList.add('wrong');
+          feedback.style.display = 'inline-block';
+          incorrectlyAnsweredQuestions.set(questionText, { wrongAnswer: userRaw, correctAnswer: correctRaw });
+        }
+        updateAreasToReExploreDisplay();
+      }
+
+      // Attach listeners for buttons/inputs inside a question li
+      function attachEventListenersToNewQuestion(li) {
+        const checkBtn = li.querySelector('.check-btn');
+        const hintBtn = li.querySelector('.hint-btn');
+        const idkBtn = li.querySelector('.idk');
+        const inputEl = li.querySelector('.answer-input');
+
+        if (checkBtn) checkBtn.type = 'button';
+        if (hintBtn) hintBtn.type = 'button';
+        if (idkBtn) idkBtn.type = 'button';
+
+        if (checkBtn && inputEl) {
+          checkBtn.addEventListener('click', () => checkAnswer(inputEl, checkBtn));
+        }
+
+        if (inputEl) {
+          // keydown is preferred; ignore Enter in textarea
+          inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && inputEl.tagName !== 'TEXTAREA') {
+              e.preventDefault();
+              const btn = li.querySelector('.check-btn');
+              if (btn) checkAnswer(inputEl, btn);
+            }
+          });
+        }
+
+        if (hintBtn) {
+          hintBtn.addEventListener('click', (e) => {
+            const hintId = hintBtn.dataset.hint;
+            const hintDiv = hintId ? li.querySelector('#' + CSS.escape(hintId)) || document.getElementById(hintId) : null;
+            if (hintDiv) {
+              hintDiv.style.display = hintDiv.style.display === 'block' ? 'none' : 'block';
+            }
+            struggledQuestions.add(getQuestionString(hintBtn));
+            addNewQuestion(); // add extra practice
+            showModal('Hint shown and a new practice challenge was added.');
+          });
+        }
+
+        if (idkBtn) {
+          idkBtn.addEventListener('click', () => {
+            const q = idkBtn.dataset.question || getQuestionString(idkBtn);
+            const prompt = `Explain "${q}" for a Year 7 student (13-year-old) step by step.`;
+            copyToClipboard(prompt).then(() => {
+              showModal('Hint prompt copied to clipboard. New challenge added.');
+            });
+            struggledQuestions.add(q);
+            addNewQuestion();
+          });
+        }
+      }
+
+      // Questions data (concise but functional)
+      const allPotentialQuestions = [
+        {
+          id: 'initial1',
+          displayHtml: `
+            <span class="qnum">1.</span> Identify the adjective in: "The fluffy koala climbed the tree." <br>
+            a. koala &nbsp; b. climbed &nbsp; c. fluffy &nbsp; d. tree
+            <div>
+              <input class="answer-input" data-correct="c" type="text" placeholder="Type a, b, c, or d" aria-label="Answer 1">
+              <button class="check-btn" type="button">Check</button>
+              <span class="feedback" aria-live="polite"></span>
+              <button class="hint-btn" type="button" data-hint="hint-initial1">Hint</button>
+              <button class="idk" type="button" data-question="Identify the adjective in: The fluffy koala climbed the tree.">I don't know</button>
+            </div>
+            <div id="hint-initial1" class="hint">Adjectives describe nouns — what word describes 'koala'?</div>`
+        },
+        {
+          id: 'initial2',
+          displayHtml: `
+            <span class="qnum">2.</span> Choose the synonym for 'happy': a. sad &nbsp; b. joyful &nbsp; c. angry &nbsp; d. tired
+            <div>
+              <input class="answer-input" data-correct="b" type="text" placeholder="Type a, b, c, or d" aria-label="Answer 2">
+              <button class="check-btn" type="button">Check</button>
+              <span class="feedback" aria-live="polite"></span>
+              <button class="hint-btn" type="button" data-hint="hint-initial2">Hint</button>
+              <button class="idk" type="button" data-question="Choose the synonym for 'happy'">I don't know</button>
+            </div>
+            <div id="hint-initial2" class="hint">A synonym is a word with a similar meaning. Which choice means the same as 'happy'?</div>`
+        },
+        {
+          id: 'initial3',
+          displayHtml: `
+            <span class="qnum">3.</span> Correct the sentence: "i run to the park"
+            <div>
+              <input class="answer-input" data-correct="I run to the park." type="text" placeholder="Type the corrected sentence" aria-label="Answer 3">
+              <button class="check-btn" type="button">Check</button>
+              <span class="feedback" aria-live="polite"></span>
+              <button class="hint-btn" type="button" data-hint="hint-initial3">Hint</button>
+              <button class="idk" type="button" data-question="Correct the sentence: i run to the park">I don't know</button>
+            </div>
+            <div id="hint-initial3" class="hint">Start with a capital letter and add punctuation at the end.</div>`
+        },
+        {
+          id: 'initial4',
+          displayHtml: `
+            <span class="qnum">4.</span> Read: "The river flowed like silk." What is the simile? <br>
+            a. river flowed &nbsp; b. like silk &nbsp; c. the river
+            <div>
+              <input class="answer-input" data-correct="b" type="text" placeholder="Type a, b, or c" aria-label="Answer 4">
+              <button class="check-btn" type="button">Check</button>
+              <span class="feedback" aria-live="polite"></span>
+              <button class="hint-btn" type="button" data-hint="hint-initial4">Hint</button>
+              <button class="idk" type="button" data-question="What is the simile in: The river flowed like silk.">I don't know</button>
+            </div>
+            <div id="hint-initial4" class="hint">A simile compares things using 'like' or 'as'.</div>`
+        },
+        {
+          id: 'initial5',
+          displayHtml: `
+            <span class="qnum">5.</span> Write a sentence about a bird using 'graceful'.
+            <div>
+              <textarea class="answer-input textarea" data-correct="graceful" aria-label="Answer 5" placeholder="Write a sentence here"></textarea>
+              <button class="check-btn" type="button">Check</button>
+              <span class="feedback" aria-live="polite"></span>
+              <button class="hint-btn" type="button" data-hint="hint-initial5">Hint</button>
+              <button class="idk" type="button" data-question="Write a sentence about a bird using graceful">I don't know</button>
+            </div>
+            <div id="hint-initial5" class="hint">Try to include the word 'graceful' and describe how the bird moves.</div>`
+        },
+
+        // A few dynamic extras
+        {
+          id: 'D1',
+          displayHtml: `
+            <span class="qnum">E1.</span> Identify the adverb in: "She sang loudly." <br>
+            a. she &nbsp; b. sang &nbsp; c. loudly &nbsp; d. none
+            <div>
+              <input class="answer-input" data-correct="c" type="text" placeholder="Type a, b, c, or d" aria-label="E1">
+              <button class="check-btn" type="button">Check</button>
+              <span class="feedback" aria-live="polite"></span>
+              <button class="hint-btn" type="button" data-hint="hint-D1">Hint</button>
+              <button class="idk" type="button" data-question="Identify the adverb in: She sang loudly.">I don't know</button>
+            </div>
+            <div id="hint-D1" class="hint">Adverbs often answer "how" — which word tells how she sang?</div>`
+        },
+        {
+          id: 'D2',
+          displayHtml: `
+            <span class="qnum">E2.</span> Choose the antonym for 'big': a. large &nbsp; b. small &nbsp; c. tall &nbsp; d. wide
+            <div>
+              <input class="answer-input" data-correct="b" type="text" placeholder="Type a, b, c, or d" aria-label="E2">
+              <button class="check-btn" type="button">Check</button>
+              <span class="feedback" aria-live="polite"></span>
+              <button class="hint-btn" type="button" data-hint="hint-D2">Hint</button>
+              <button class="idk" type="button" data-question="Choose the antonym for 'big'">I don't know</button>
+            </div>
+            <div id="hint-D2" class="hint">An antonym is the opposite meaning — choose the opposite of 'big'.</div>`
+        },
+        {
+          id: 'D3',
+          displayHtml: `
+            <span class="qnum">E3.</span> Choose the correct punctuation: "Where is my book" <br>
+            a. ? &nbsp; b. ! &nbsp; c. .
+            <div>
+              <input class="answer-input" data-correct="a" type="text" placeholder="Type a, b, or c" aria-label="E3">
+              <button class="check-btn" type="button">Check</button>
+              <span class="feedback" aria-live="polite"></span>
+              <button class="hint-btn" type="button" data-hint="hint-D3">Hint</button>
+              <button class="idk" type="button" data-question="Choose the correct punctuation for: Where is my book">I don't know</button>
+            </div>
+            <div id="hint-D3" class="hint">Questions usually end with a question mark (?).</div>`
+        }
+      ];
+
+      // Pools
+      let initialQuestions = [];
+      let dynamicQuestionsPool = [];
+
+      function initializeQuestions() {
+        // Detect initial items by id prefix 'initial'
+        initialQuestions = allPotentialQuestions.filter(q => typeof q.id === 'string' && q.id.startsWith('initial'));
+        dynamicQuestionsPool = allPotentialQuestions.filter(q => !(q.id && q.id.startsWith('initial')));
+
+        practiceQuestionsOl.innerHTML = '';
+        initialQuestions.forEach((q, idx) => {
+          const li = document.createElement('li');
+          li.innerHTML = q.displayHtml;
+          li.dataset.qid = q.id;
+          practiceQuestionsOl.appendChild(li);
+          attachEventListenersToNewQuestion(li);
+        });
+      }
+
+      function addNewQuestion() {
+        if (dynamicQuestionsPool.length === 0) return;
+        const idx = Math.floor(Math.random() * dynamicQuestionsPool.length);
+        const q = dynamicQuestionsPool.splice(idx, 1)[0];
+        const li = document.createElement('li');
+        li.innerHTML = q.displayHtml;
+        li.dataset.qid = q.id;
+        practiceQuestionsOl.appendChild(li);
+        attachEventListenersToNewQuestion(li);
+      }
+
+      // Initialize stored progress
+      function loadStoredProgress() {
+        const sGems = parseInt(localStorage.getItem('dora_gems') || '0', 10) || 0;
+        const sLevel = parseInt(localStorage.getItem('dora_level') || '0', 10) || 0;
+        gems = sGems;
+        currentLevel = sLevel;
+        document.getElementById('progress-gems').textContent = gems;
+        document.getElementById('adventure-level').textContent = levels[currentLevel] || levels[0];
+      }
+
+      // Daily streak handling (simple)
+      function updateStreak() {
+        const today = new Date().toDateString();
+        const last = localStorage.getItem('dora_last_visit');
+        let streak = parseInt(localStorage.getItem('dora_streak') || '0', 10) || 0;
+        if (last !== today) {
+          // increment if last visit exists and was yesterday (simple approach: increment anyway if different)
+          streak = streak + 1;
+          localStorage.setItem('dora_last_visit', today);
+          localStorage.setItem('dora_streak', String(streak));
+        }
+        document.getElementById('streak').textContent = streak;
+        return streak;
+      }
+
+      // When sets change update displays
+      const originalAdd = struggledQuestions.add;
+      struggledQuestions.add = function() {
+        originalAdd.apply(this, arguments);
+        updateAreasToReExploreDisplay();
+      };
+      const originalClear = struggledQuestions.clear;
+      struggledQuestions.clear = function() {
+        originalClear.apply(this, arguments);
+        updateAreasToReExploreDisplay();
+      };
+
+      // Attach global buttons
+      document.addEventListener('DOMContentLoaded', () => {
+        loadStoredProgress();
+        initializeQuestions();
+        updateAreasToReExploreDisplay();
+        updateStreak();
+
+        document.getElementById('email-report-btn').addEventListener('click', submitReportViaEmail);
+        document.getElementById('copy-report-btn').addEventListener('click', copyReportToClipboardHandler);
+        document.getElementById('reset-progress-btn').addEventListener('click', resetProgress);
+        document.getElementById('share-report-bottom').addEventListener('click', submitReportViaEmail);
+      });
+
+      // Helper: safe attach for new lis
+      function attachEventListenersToNewQuestion(li) {
+        // Ensure button types are correct
+        li.querySelectorAll('button').forEach(b => b.type = 'button');
+
+        const inputEl = li.querySelector('.answer-input');
+        const checkBtn = li.querySelector('.check-btn');
+        const hintBtn = li.querySelector('.hint-btn');
+        const idkBtn = li.querySelector('.idk');
+
+        if (checkBtn && inputEl) {
+          checkBtn.addEventListener('click', () => checkAnswer(inputEl, checkBtn));
+        }
+        if (inputEl) {
+          inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && inputEl.tagName !== 'TEXTAREA') {
+              e.preventDefault();
+              const btn = li.querySelector('.check-btn');
+              if (btn) checkAnswer(inputEl, btn);
+            }
+          });
+        }
+        if (hintBtn) {
+          hintBtn.addEventListener('click', () => {
+            const hintId = hintBtn.dataset.hint;
+            const hintDiv = hintId ? li.querySelector('#' + CSS.escape(hintId)) || document.getElementById(hintId) : null;
+            if (hintDiv) hintDiv.style.display = hintDiv.style.display === 'block' ? 'none' : 'block';
+            struggledQuestions.add(getQuestionString(hintBtn));
+            addNewQuestion();
+            showModal('Hint revealed and an extra challenge was added.');
+          });
+        }
+        if (idkBtn) {
+          idkBtn.addEventListener('click', () => {
+            const q = idkBtn.dataset.question || getQuestionString(idkBtn);
+            const prompt = `Explain "${q}" step-by-step for a Year 7 student.`;
+            copyToClipboard(prompt).then(() => showModal('Hint prompt copied to clipboard.'));
+            struggledQuestions.add(q);
+            addNewQuestion();
+          });
+        }
+      }
+
+      // Expose functions for buttons
+      window.submitReportViaEmail = submitReportViaEmail;
+      window.copyReportToClipboard = copyReportToClipboardHandler;
+      window.resetProgress = resetProgress;
+
+      // End of IIFE functions defined below:
+      function submitReportViaEmail() {
+        const report = generateReportContent().replace(/[🦋🚀🎉📖]/g, '');
+        const subject = encodeURIComponent("Dora's Language Report");
+        const body = encodeURIComponent(report);
+        window.location.href = `mailto:teacher@example.com?subject=${subject}&body=${body}`;
+      }
+
+      function generateReportContent() {
+        const struggledList = struggledQuestions.size ? Array.from(struggledQuestions).slice(0,20).join('; ') : 'None';
+        let incorrectReport = '';
+        if (incorrectlyAnsweredQuestions.size > 0) {
+          incorrectReport += '\nQuestions with Incorrect Attempts:\n';
+          incorrectlyAnsweredQuestions.forEach((details, question) => {
+            incorrectReport += `- Question: ${question}\n  Your Answer: ${details.wrongAnswer}\n  Correct Answer: ${details.correctAnswer}\n`;
+          });
+        } else {
+          incorrectReport += '\nQuestions with Incorrect Attempts: None\n';
+        }
+        return `Total Word Gems: ${gems}
+Adventure Level: ${levels[currentLevel]}
+Daily Check-in Streak: ${updateStreak()}
+Areas to Re-Explore (hint/IDK): ${struggledList}
+Areas with incorrect attempts: ${incorrectlyAnsweredQuestions.size}
+${incorrectReport}
+Report generated: ${new Date().toLocaleString()}
+`;
+      }
+
+      function copyReportToClipboardHandler() {
+        const report = generateReportContent().replace(/[🦋🚀🎉📖]/g, '');
+        copyToClipboard(report);
+      }
+
+      // Function definitions repeated inside IIFE scope for clarity
+      function checkAnswer(inputEl, checkBtn) {
+        if (!inputEl || !checkBtn) return;
+        const li = inputEl.closest('li');
+        const feedback = li.querySelector('.feedback');
+        const userRaw = (inputEl.value || '').trim();
+        const user = userRaw.toLowerCase();
+        const correctRaw = (inputEl.dataset.correct || '').toString();
+        const correct = correctRaw.trim().toLowerCase();
+        let isCorrect = false;
+
+        if (inputEl.tagName === 'TEXTAREA') {
+          if (correct && user.includes(correct)) isCorrect = true;
+        } else {
+          if (user === correct) isCorrect = true;
+          if (!isCorrect && /^[a-d]$/.test(correct) && user.match(/^[a-d]\.?(\s+.*)?$/)) {
+            if (user[0] === correct[0]) isCorrect = true;
+          }
+        }
+
+        const questionText = getQuestionString(inputEl);
+
+        if (isCorrect) {
+          feedback.textContent = 'Correct! 🎉';
+          feedback.classList.remove('wrong');
+          feedback.classList.add('right');
+          feedback.style.display = 'inline-block';
+          if (!inputEl.dataset.checked) {
+            updateGems();
+            inputEl.dataset.checked = 'true';
+            localStorage.setItem('dora_gems', String(gems));
+          }
+          inputEl.disabled = true;
+          checkBtn.disabled = true;
+          if (incorrectlyAnsweredQuestions.has(questionText)) incorrectlyAnsweredQuestions.delete(questionText);
+        } else {
+          feedback.textContent = `Not quite — you entered "${userRaw}". Try again.`;
+          feedback.classList.remove('right');
+          feedback.classList.add('wrong');
+          feedback.style.display = 'inline-block';
+          incorrectlyAnsweredQuestions.set(questionText, { wrongAnswer: userRaw, correctAnswer: correctRaw });
+        }
+        updateAreasToReExploreDisplay();
+      }
+
+    })();
+  </script>
+</body>
+</html>
