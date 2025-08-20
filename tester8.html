@@ -490,12 +490,19 @@ Report generated: ${new Date().toLocaleString()}
 
       // Daily streak handling (simple)
       function updateStreak() {
-        const today = new Date().toDateString();
+        const todayDate = new Date();
+        const today = todayDate.toDateString();
         const last = localStorage.getItem('dora_last_visit');
         let streak = parseInt(localStorage.getItem('dora_streak') || '0', 10) || 0;
         if (last !== today) {
-          // increment if last visit exists and was yesterday (simple approach: increment anyway if different)
-          streak = streak + 1;
+          if (last) {
+            const lastDate = new Date(last);
+            const diffTime = todayDate - lastDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            streak = diffDays === 1 ? streak + 1 : 1;
+          } else {
+            streak = 1;
+          }
           localStorage.setItem('dora_last_visit', today);
           localStorage.setItem('dora_streak', String(streak));
         }

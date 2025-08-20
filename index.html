@@ -351,11 +351,19 @@
         }
 
         function updateStreak() {
-            const today = new Date().toDateString();
+            const todayDate = new Date();
+            const today = todayDate.toDateString();
             const lastVisit = localStorage.getItem('lastVisit');
             let streak = parseInt(localStorage.getItem('streak') || '0');
             if (lastVisit !== today) {
-                streak++;
+                if (lastVisit) {
+                    const lastDate = new Date(lastVisit);
+                    const diffTime = todayDate - lastDate;
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    streak = diffDays === 1 ? streak + 1 : 1;
+                } else {
+                    streak = 1;
+                }
                 localStorage.setItem('streak', streak);
                 localStorage.setItem('lastVisit', today);
             }
