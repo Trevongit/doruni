@@ -13,13 +13,26 @@
     .correct {color: green;}
     .incorrect {color: red;}
     .sr-only {position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden;}
+    #controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    #calc-panel{position:fixed;top:0;right:0;width:260px;max-width:100%;height:100%;background:#fff;border-left:1px solid #ccc;box-shadow:-2px 0 5px rgba(0,0,0,0.2);transform:translateX(100%);transition:transform 0.3s;z-index:1000;}
+    #calc-panel.open{transform:translateX(0);}
+    #calc-panel section{height:100%;display:flex;flex-direction:column;}
+    #calc-display{background:#222;color:#fff;padding:10px;font-size:1.2rem;min-height:3em;}
+    #calc-display .expr{font-size:1rem;word-wrap:break-word;}
+    #calc-buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px;}
+    #calc-buttons button{padding:10px;font-size:1.2rem;}
+    #paste-answer{grid-column:span 2;}
+    #calc-buttons button[data-key="="]{grid-column:span 2;}
+    #calc-close{align-self:flex-end;}
+    @media(max-width:600px){#calc-panel{width:100%;height:50%;top:auto;bottom:0;right:auto;transform:translateY(100%);}#calc-panel.open{transform:translateY(0);}}
   </style>
 </head>
 <body>
   <h1>Ratios Practice</h1>
   <p>Answer 12 random ratio questions. Use whole numbers only.</p>
   <p id="last-attempt"></p>
-  <div id="quiz-root"></div>
+  <div id="controls"><button id="calc-toggle" aria-expanded="false">Calculator</button> <div id="quiz-root"></div></div>
+  <div id="calc-panel" hidden></div>
   <script src="../assets/quiz-ratios.js"></script>
 </body>
 </html>
