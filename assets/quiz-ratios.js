@@ -209,5 +209,107 @@
       userAnswers=[];
       renderQuestion();
     });
+  } 
+})();
+
+(function(){
+  const panel=document.getElementById('calc-panel');
+  const toggle=document.getElementById('calc-toggle');
+  if(!panel||!toggle) return;
+
+  panel.innerHTML=`<section id="calculator" role="dialog" aria-modal="true"><button id="calc-close" aria-label="Close calculator">×</button><div id="calc-display"><div class="expr"></div><div class="res" role="status" aria-live="polite"></div></div><div id="calc-buttons"><button data-key="7" aria-label="7">7</button><button data-key="8" aria-label="8">8</button><button data-key="9" aria-label="9">9</button><button data-key="/" aria-label="divide">÷</button><button data-key="4" aria-label="4">4</button><button data-key="5" aria-label="5">5</button><button data-key="6" aria-label="6">6</button><button data-key="*" aria-label="multiply">×</button><button data-key="1" aria-label="1">1</button><button data-key="2" aria-label="2">2</button><button data-key="3" aria-label="3">3</button><button data-key="-" aria-label="subtract">−</button><button data-key="0" aria-label="0">0</button><button data-key="." aria-label="decimal point">.</button><button data-key="%" aria-label="percent">%</button><button data-key="+" aria-label="add">+</button><button data-key="(" aria-label="left parenthesis">(</button><button data-key=")" aria-label="right parenthesis">)</button><button data-key="C" aria-label="clear">C</button><button data-key="⌫" aria-label="backspace">⌫</button><button data-key="=" aria-label="equals">=</button><button data-key="paste" id="paste-answer" aria-label="paste result to answer">Paste to answer</button></div></section>`;
+
+  const exprEl=panel.querySelector('.expr');
+  const resEl=panel.querySelector('.res');
+  let expr='';
+  let lastFocused=null;
+
+  function updateDisplay(){
+    exprEl.textContent=expr.replace(/\*/g,'×').replace(/\//g,'÷');
+  }
+  function clear(){expr='';resEl.textContent='';updateDisplay();}
+  function backspace(){expr=expr.slice(0,-1);updateDisplay();}
+  function append(ch){expr+=ch;updateDisplay();}
+  function evaluate(){
+    const val=safeEval(expr);
+    if(val===null){resEl.textContent='Invalid expression';return null;}
+    const r=Math.round(val*1e6)/1e6;
+    resEl.textContent=r.toString();
+    return r;
+  }
+  function paste(){
+    const result=evaluate();
+    if(result===null) return;
+    const input=document.querySelector('#quiz-root input');
+    if(input){input.value=result;input.focus();}
+  }
+  function safeEval(str){
+    if(!/^[0-9+\-*/().%\s]+$/.test(str)) return null;
+    if(/([+\-*/%.]{2,})|(^[*/%])|([+\-*/%]$)|([0-9]\s+[0-9])/.test(str)) return null;
+    try{
+      const sanitized=str.replace(/%/g,'/100');
+      const r=Function('"use strict";return ('+sanitized+')')();
+      return (typeof r==='number'&&isFinite(r))?r:null;
+    }catch(e){return null;}
+  }
+  function handleInput(key){
+    if(key==='C'){clear();return;}
+    if(key==='⌫'){backspace();return;}
+    if(key==='='){evaluate();return;}
+    if(key==='paste'){paste();return;}
+    append(key);
+  }
+  panel.querySelectorAll('#calc-buttons button').forEach(btn=>{
+    btn.addEventListener('click',()=>handleInput(btn.dataset.key));
+  });
+
+  function handleKeyboard(e){
+    const k=e.key;
+    if(k==='Escape'){close();return;}
+    if(k==='Enter'){e.preventDefault();evaluate();return;}
+    if(k==='Backspace'){e.preventDefault();backspace();return;}
+    if(/[0-9+\-*/().%]/.test(k)){e.preventDefault();append(k);}
+  }
+
+  function open(){
+    if(!panel.hasAttribute('hidden')) return;
+    lastFocused=document.activeElement;
+    panel.removeAttribute('hidden');
+    panel.classList.add('open');
+    document.addEventListener('keydown',handleKeyboard);
+    trapFocus();
+    const first=panel.querySelector('button');
+    if(first) first.focus();
+    toggle.setAttribute('aria-expanded','true');
+  }
+  function close(){
+    panel.classList.remove('open');
+    panel.setAttribute('hidden','');
+    document.removeEventListener('keydown',handleKeyboard);
+    releaseFocus();
+    toggle.setAttribute('aria-expanded','false');
+    if(lastFocused) lastFocused.focus();
+  }
+  toggle.addEventListener('click',()=>{panel.hasAttribute('hidden')?open():close();});
+  panel.querySelector('#calc-close').addEventListener('click',close);
+
+  function trapFocus(){
+    const focusable=panel.querySelectorAll('button, [tabindex]');
+    const first=focusable[0];
+    const last=focusable[focusable.length-1];
+    panel.addEventListener('keydown',focusTrap);
+    function focusTrap(e){
+      if(e.key!=='Tab') return;
+      if(e.shiftKey){
+        if(document.activeElement===first){e.preventDefault();last.focus();}
+      } else {
+        if(document.activeElement===last){e.preventDefault();first.focus();}
+      }
+    }
+    panel._focusTrap=focusTrap;
+  }
+  function releaseFocus(){
+    panel.removeEventListener('keydown',panel._focusTrap);
+    delete panel._focusTrap;
   }
 })();
