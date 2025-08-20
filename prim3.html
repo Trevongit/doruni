@@ -363,14 +363,23 @@
         }
 
         function updateStreak() {
-            const today = new Date().toDateString();
+            const todayDate = new Date();
+            const today = todayDate.toDateString();
             const lastVisit = localStorage.getItem('lastVisit');
-            streak = parseInt(localStorage.getItem('streak') || '0');
+            let stored = parseInt(localStorage.getItem('streak') || '0');
             if (lastVisit !== today) {
-                streak++;
-                localStorage.setItem('streak', streak);
+                if (lastVisit) {
+                    const lastDate = new Date(lastVisit);
+                    const diffTime = todayDate - lastDate;
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    stored = diffDays === 1 ? stored + 1 : 1;
+                } else {
+                    stored = 1;
+                }
+                localStorage.setItem('streak', stored);
                 localStorage.setItem('lastVisit', today);
             }
+            streak = stored;
             document.getElementById('streak').textContent = streak;
             return streak;
         }
