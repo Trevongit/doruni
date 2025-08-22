@@ -9,7 +9,10 @@
     return {a:parts[0],b:parts[1],text:parts[0]+":"+parts[1]};
   }
   function parseIntInput(str){
-    const n=Number(str.trim());
+    if(!str) return null;
+    const trimmed=str.trim();
+    if(trimmed==='') return null;
+    const n=Number(trimmed);
     return Number.isInteger(n)?n:null;
   }
   function shuffle(arr){
